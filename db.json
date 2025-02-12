@@ -1,0 +1,471 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Alice Demo",
+      "email": "alice@example.com",
+      "bio": "I am Alice yes",
+      "profileImageUrl": "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250"
+    },
+    {
+      "id": "2",
+      "name": "Bob",
+      "email": "bob@example.com",
+      "bio": "I am Bob",
+      "profileImageUrl": "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250"
+    }
+  ],
+  "posts": [
+    {
+      "id": "1",
+      "title": "Hello World",
+      "content": "This is my first post!"
+    }
+  ],
+  "userStatistics": [
+    {
+      "users": {
+        "totalUser": "20",
+        "growthPer": "12.5"
+      },
+      "revenue": {
+        "totalRevenue": "5678",
+        "growthPer": "8.3"
+      },
+      "orders": {
+        "totalOrders": "567",
+        "growthPer": "-3.2"
+      },
+      "comments": {
+        "totalComments": "890",
+        "growthPer": "5.7"
+      },
+      "id": "4da7"
+    }
+  ],
+  "revenueOverview": [
+    {
+      "labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+      "datasets": [
+        {
+          "label": "Sales",
+          "data": [65, 59, 80, 81, 56, 55],
+          "fill": false,
+          "borderColor": "rgb(75, 192, 192)",
+          "tension": 0.1
+        }
+      ],
+      "id": "8566"
+    }
+  ],
+  "trafficData": [
+    {
+      "labels": ["Direct", "Social", "Referral", "Organic"],
+      "datasets": [
+        {
+          "data": [35, 25, 20, 20],
+          "backgroundColor": [
+            "rgba(54, 162, 235, 0.8)",
+            "rgba(255, 99, 132, 0.8)",
+            "rgba(75, 192, 192, 0.8)",
+            "rgba(255, 206, 86, 0.8)"
+          ],
+          "borderColor": [
+            "rgba(54, 162, 235, 1)",
+            "rgba(255, 99, 132, 1)",
+            "rgba(75, 192, 192, 1)",
+            "rgba(255, 206, 86, 1)"
+          ],
+          "borderWidth": 1
+        }
+      ],
+      "id": "61ee"
+    }
+  ],
+  "activities": [
+    {
+      "id": "1",
+      "action": "New order received",
+      "time": "5 minutes ago",
+      "type": "order"
+    },
+    {
+      "id": "2",
+      "action": "Server CPU usage high",
+      "time": "15 minutes ago",
+      "type": "system"
+    },
+    {
+      "id": "3",
+      "action": "New user registered",
+      "time": "1 hour ago",
+      "type": "user"
+    },
+    {
+      "id": "4",
+      "action": "Product stock low",
+      "time": "2 hours ago",
+      "type": "inventory"
+    }
+  ],
+  "topProducts": [
+    {
+      "id": "1",
+      "name": "Wireless Earbuds",
+      "sales": 245,
+      "revenue": "$12,450",
+      "trend": "up"
+    },
+    {
+      "id": "2",
+      "name": "Smart Watch",
+      "sales": 190,
+      "revenue": "$9,500",
+      "trend": "up"
+    },
+    {
+      "id": "3",
+      "name": "Laptop Stand",
+      "sales": 175,
+      "revenue": "$4,375",
+      "trend": "down"
+    },
+    {
+      "id": "4",
+      "name": "USB-C Hub",
+      "sales": 156,
+      "revenue": "$3,900",
+      "trend": "up"
+    }
+  ],
+  "task": [
+    {
+      "id": "1",
+      "title": "Review new orders",
+      "status": "pending",
+      "priority": "high"
+    },
+    {
+      "id": "2",
+      "title": "Update inventory",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "id": "3",
+      "title": "Customer support meeting",
+      "status": "pending",
+      "priority": "high"
+    },
+    {
+      "id": "4",
+      "title": "Check server logs",
+      "status": "pending",
+      "priority": "low"
+    }
+  ],
+  "systemHealth": [
+    {
+      "name": "Server CPU",
+      "value": 68,
+      "status": "warning",
+      "id": "c4c4"
+    },
+    {
+      "name": "Memory Usage",
+      "value": 42,
+      "status": "success",
+      "id": "e03f"
+    },
+    {
+      "name": "Storage",
+      "value": 85,
+      "status": "danger",
+      "id": "e233"
+    },
+    {
+      "name": "Network",
+      "value": 25,
+      "status": "success",
+      "id": "4e5c"
+    }
+  ],
+  "roles": [
+    {
+      "id": "1",
+      "name": "Super Admin"
+    },
+    {
+      "id": "2",
+      "name": "Manager"
+    },
+    {
+      "id": "3",
+      "name": "Editor"
+    },
+    {
+      "id": "4",
+      "name": "Viewer"
+    }
+  ],
+  "permissions": [
+    {
+      "id": "1",
+      "name": "View Users"
+    },
+    {
+      "id": "2",
+      "name": "Edit Users"
+    },
+    {
+      "id": "3",
+      "name": "Delete Users"
+    },
+    {
+      "id": "4",
+      "name": "Access Logs"
+    },
+    {
+      "id": "5",
+      "name": "Manage Orders"
+    }
+  ],
+  "rolePermissions": [
+    {
+      "roleId": "1",
+      "permissions": ["1", "2", "3", "4", "5", "6"],
+      "id": "a339"
+    },
+    {
+      "roleId": "2",
+      "permissions": ["1", "2", "5"],
+      "id": "f619"
+    },
+    {
+      "roleId": "3",
+      "permissions": ["1", "2"],
+      "id": "9417"
+    },
+    {
+      "roleId": "4",
+      "permissions": ["1"],
+      "id": "9283"
+    }
+  ],
+  "logs": [
+    {
+      "id": "1",
+      "timestamp": "2024-02-10T10:30:00Z",
+      "action": "Updated Role",
+      "changedBy": "Admin",
+      "description": "Changed role permissions for user John Doe."
+    },
+    {
+      "id": "2",
+      "timestamp": "2024-02-10T11:15:00Z",
+      "action": "Deleted User",
+      "changedBy": "Admin",
+      "description": "User Jane Doe was removed from the system."
+    },
+    {
+      "id": "3",
+      "timestamp": "2024-02-10T12:00:00Z",
+      "action": "Added Permission",
+      "changedBy": "Moderator",
+      "description": "Added new permission 'View Reports'."
+    },
+    {
+      "id": "4",
+      "timestamp": "2024-02-10T13:20:00Z",
+      "action": "Edited Product Details",
+      "changedBy": "Manager",
+      "description": "Updated pricing and details for 'Wireless Earbuds'."
+    }
+  ],
+  "translations": [
+    {
+      "id": "en",
+      "language": "English",
+      "navbar": {
+        "brand": "Exiliensoft",
+        "language": {
+          "en": "English",
+          "fr": "French"
+        },
+        "notifications": "3",
+        "admin": "Administrator",
+        "settings": "Settings",
+        "logout": "Logout"
+      },
+      "sidebar": {
+        "title": "Dashboard",
+        "home": "Home",
+        "users": "Users",
+        "roles": "Roles & Permissions",
+        "logs": "Activity Logs",
+        "settings": "Settings"
+      },
+      "settings": {
+        "title": "Settings",
+        "profile": {
+          "title": "Profile",
+          "imageNote": "PNG or JPG no bigger than 1000px wide and tall.",
+          "firstName": "First Name",
+          "lastName": "Last Name",
+          "email": "Email Address",
+          "phone": "Phone",
+          "phonePlaceholder": "Enter the phone number",
+          "gender": "Gender",
+          "genderOptions": {
+            "male": "Male",
+            "female": "Female",
+            "other": "Other"
+          },
+          "role": "Role",
+          "roleOptions": {
+            "administrator": "Administrator",
+            "user": "User",
+            "moderator": "Moderator",
+            "guest": "Guest"
+          },
+          "save": "Save Changes"
+        },
+        "notifications": {
+          "title": "Notifications",
+          "email": "Email Notifications",
+          "emailDescription": "Receive notifications via email",
+          "push": "Push Notifications",
+          "pushDescription": "Receive push notifications"
+        },
+        "security": {
+          "title": "Security",
+          "currentPassword": "Current Password",
+          "newPassword": "New Password",
+          "confirmPassword": "Confirm Password",
+          "updateButton": "Update Password"
+        },
+        "language": {
+          "title": "Language",
+          "select": "Select Language"
+        },
+        "appearance": {
+          "title": "Appearance",
+          "theme": "Theme",
+          "light": "Light",
+          "dark": "Dark",
+          "system": "System",
+          "saveButton": "Save Changes"
+        }
+      },
+      "login": {
+        "title": "Welcome Back",
+        "description": "Please enter your credentials to login",
+        "username": "Username",
+        "usernamePlaceholder": "Enter your username",
+        "password": "Password",
+        "passwordPlaceholder": "Enter your password",
+        "rememberMe": "Remember me",
+        "forgotPassword": "Forgot Password?",
+        "loginButton": "Login"
+      }
+    },
+    {
+      "id": "fr",
+      "language": "Français",
+      "navbar": {
+        "brand": "Exiliensoft",
+        "language": {
+          "en": "Anglais",
+          "fr": "Français"
+        },
+        "notifications": "3",
+        "admin": "Administrateur",
+        "settings": "Paramètres",
+        "logout": "Déconnexion"
+      },
+      "sidebar": {
+        "title": "Tableau de Bord",
+        "home": "Accueil",
+        "users": "Utilisateurs",
+        "roles": "Rôles et Permissions",
+        "logs": "Journaux d'activités",
+        "settings": "Paramètres"
+      },
+      "settings": {
+        "title": "Paramètres",
+        "profile": {
+          "title": "Profil",
+          "imageNote": "PNG ou JPG ne dépassant pas 1000px de large et de haut.",
+          "firstName": "Prénom",
+          "lastName": "Nom de famille",
+          "email": "Adresse e-mail",
+          "phone": "Téléphone",
+          "phonePlaceholder": "Entrez le numéro de téléphone",
+          "gender": "Genre",
+          "genderOptions": {
+            "male": "Homme",
+            "female": "Femme",
+            "other": "Autre"
+          },
+          "role": "Rôle",
+          "roleOptions": {
+            "administrator": "Administrateur",
+            "user": "Utilisateur",
+            "moderator": "Modérateur",
+            "guest": "Invité"
+          },
+          "save": "Enregistrer les modifications"
+        },
+        "notifications": {
+          "title": "Notifications",
+          "email": "Notifications par e-mail",
+          "emailDescription": "Recevez des notifications par e-mail",
+          "push": "Notifications push",
+          "pushDescription": "Recevez des notifications push"
+        },
+        "security": {
+          "title": "Sécurité",
+          "currentPassword": "Mot de passe actuel",
+          "newPassword": "Nouveau mot de passe",
+          "confirmPassword": "Confirmer le mot de passe",
+          "updateButton": "Mettre à jour le mot de passe"
+        },
+        "language": {
+          "title": "Langue",
+          "select": "Sélectionner la langue"
+        },
+        "appearance": {
+          "title": "Apparence",
+          "theme": "Thème",
+          "light": "Clair",
+          "dark": "Sombre",
+          "system": "Système",
+          "saveButton": "Enregistrer les modifications"
+        }
+      },
+      "login": {
+        "title": "Bon retour",
+        "description": "Veuillez entrer vos identifiants pour vous connecter",
+        "username": "Nom d'utilisateur",
+        "usernamePlaceholder": "Entrez votre nom d'utilisateur",
+        "password": "Mot de passe",
+        "passwordPlaceholder": "Entrez votre mot de passe",
+        "rememberMe": "Se souvenir de moi",
+        "forgotPassword": "Mot de passe oublié?",
+        "loginButton": "Connexion"
+      }
+    }
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "name": "English",
+      "flag": "https://cdn-icons-png.flaticon.com/128/197/197374.png"
+    },
+    {
+      "id": "fr",
+      "name": "Français",
+      "flag": "https://cdn-icons-png.flaticon.com/128/197/197560.png"
+    }
+  ]
+}
