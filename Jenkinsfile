@@ -13,7 +13,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker Image...'
-                    sh 'docker build -t lang-api .'
+                    sh 'docker build -t prateekchaudhary7805/lang-api .'
                 }
                 echo 'Docker Build Success'
             }
