@@ -12,6 +12,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    echo 'Removing old Docker Image (if exists)...'
+                    sh 'docker rmi -f prateekchaudhary7805/lang-api:latest || true'
+                    
                     echo 'Building Docker Image...'
                     sh 'docker build -t prateekchaudhary7805/lang-api:latest .'
                 }
