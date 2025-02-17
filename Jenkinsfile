@@ -18,7 +18,25 @@ pipeline {
                 echo 'Docker Build Success'
             }
         }
-
+        stage('Push Docker Image to dockerhub') {
+            steps {
+                script {
+                    echo 'Pushing Docker Image to DockerHub'
+                    sh 'docker push prateekchaudhary7805/lang-api'
+                }
+                echo 'Image pushed Successfully'
+            }
+        }
+        stage('Pull Docker Image') {
+            steps {
+                script {
+                    echo 'Pull Docker Image from DockerHub'
+                    sh 'docker pull prateekchaudhary7805/lang-api'
+                }
+                echo 'Image pulled Successfully'
+            }
+        }
+        
         stage('Deploy Docker Container') {
             steps {
                 script {
