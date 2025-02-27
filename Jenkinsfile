@@ -57,21 +57,22 @@ pipeline {
             steps {
                 script {
                     echo 'Pull Docker Image from DockerHub'
-                    sh 'docker pull prateekchaudhary7805/lang-api'
+                    sh 'docker pull asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api:latest'
+
                 }
                 echo 'Image pulled Successfully'
             }
         }
         
-        stage('Deploy Docker Container') {
+        stage('Deploy') {
             steps {
                 script {
-                    echo 'Stopping and Removing Existing Container (if any)...'
+                    /*echo 'Stopping and Removing Existing Container (if any)...'
                     sh 'docker stop lang-api || true'
                     sh 'docker rm lang-api || true'
-                    
+                    */
                     echo 'Running New Docker Container...'
-                    sh 'docker run -d --name lang-api -p 5000:5000 prateekchaudhary7805/lang-api:latest'
+                    sh 'docker pull asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api:latest'
                 }
                 echo 'Deployment Successfull'
             }
