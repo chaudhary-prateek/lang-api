@@ -74,7 +74,7 @@ pipeline {
                     echo 'Running New Docker Container...'
                     sh 'docker run -d --name lang-api -p 5000:5000 lang-api-final:latest'
                 }
-                echo 'Deployment Successfull'
+                echo 'Deployment Successful'
             }
         }
         
