@@ -67,10 +67,10 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    /*echo 'Stopping and Removing Existing Container (if any)...'
+                    echo 'Stopping and Removing Existing Container (if any)...'
                     sh 'docker stop lang-api || true'
                     sh 'docker rm lang-api || true'
-                    */
+                    
                     echo 'Running New Docker Container...'
                     sh 'docker run -d --name lang-api -p 5000:5000 lang-api-final:latest'
                 }
