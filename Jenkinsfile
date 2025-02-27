@@ -5,7 +5,7 @@ pipeline {
     }
 
     environment {
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-sa-key')  // ✅ Use stored GCP service account credentials
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('052b1bf8-2b2c-402e-8f35-a9df3f741d9c')  // ✅ Use stored GCP service account credentials
     }
 
     stages {
