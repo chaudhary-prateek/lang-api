@@ -16,16 +16,21 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker Image...'
-                    sh 'docker build --pull --no-cache -t prateekchaudhary7805/lang-api:latest .'
+                    sh 'docker build --pull --no-cache -t prateekchaudhary7805/lang-api.'
                 }
                 echo 'Docker Build Success'
+            }
+        }
+        stage('Tag Docker Image') {
+            steps {
+                sh 'docker tag lang-api:latest asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api'
             }
         }
         stage('Push to Artifact Repository') {
             steps {
                 script {
                     echo 'Pushing Docker Image to Artifact Repository'
-                    sh 'docker push asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api:latest' 
+                    sh 'docker push asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api' 
                 }
                 echo 'Image pushed Successfully'
             }
