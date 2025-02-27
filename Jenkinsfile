@@ -16,7 +16,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker Image...'
-                    sh 'docker build --pull --no-cache -t prateekchaudhary7805/lang-api.'
+                    sh 'docker build -t lang-api .'
                 }
                 echo 'Docker Build Success'
             }
