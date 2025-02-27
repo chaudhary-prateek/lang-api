@@ -20,7 +20,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker Image...'
-                    sh 'docker build -t lang-api .'
+                    sh 'docker build -t lang-api-final .'
                 }
                 echo 'Docker Build Success'
             }
@@ -37,7 +37,7 @@ pipeline {
 
         stage('Tag Docker Image') {
             steps {
-                sh 'docker tag lang-api:latest asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api'
+                sh 'docker tag lang-api:latest asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final'
             }
         }
 
@@ -45,7 +45,7 @@ pipeline {
             steps {
                 script {
                     echo 'Pushing Docker Image to Artifact Repository'
-                    sh 'docker push asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api' 
+                    sh 'docker push asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final' 
                 }
                 echo 'Image pushed Successfully'
             }
@@ -56,8 +56,8 @@ pipeline {
         stage('Pull Docker Image') {
             steps {
                 script {
-                    echo 'Pull Docker Image from DockerHub'
-                    sh 'docker pull asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api:latest'
+                    echo 'Pull Image from artifact repository'
+                    sh 'docker pull asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final:latest'
 
                 }
                 echo 'Image pulled Successfully'
@@ -72,7 +72,7 @@ pipeline {
                     sh 'docker rm lang-api || true'
                     */
                     echo 'Running New Docker Container...'
-                    sh 'docker pull asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api:latest'
+                    sh 'docker run -d --name lang-api -p 5000:5000 lang-api-final:latest'
                 }
                 echo 'Deployment Successfull'
             }
