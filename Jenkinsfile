@@ -21,15 +21,16 @@ pipeline {
                 echo 'Docker Build Success'
             }
         }
-        stage('Push Docker Image to dockerhub') {
+        stage('Push to Artifact Repository') {
             steps {
                 script {
-                    echo 'Pushing Docker Image to DockerHub'
-                    sh 'docker push prateekchaudhary7805/lang-api'
+                    echo 'Pushing Docker Image to Artifact Repository'
+                    sh 'docker push asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api:latest' 
                 }
                 echo 'Image pushed Successfully'
             }
         }
+        /*
         stage('Pull Docker Image') {
             steps {
                 script {
@@ -53,5 +54,6 @@ pipeline {
                 echo 'Deployment Successful'
             }
         }
+        */
     }
 }
