@@ -73,7 +73,7 @@ pipeline {
                     echo 'Running New Docker Container...'
                     sh 'docker run -d --name lang-api -p 5000:5000 prateekchaudhary7805/lang-api:latest'
                 }
-                echo 'Deployment Successful'
+                echo 'Deployment Successfull'
             }
         }
         
