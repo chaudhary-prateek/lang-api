@@ -4,6 +4,10 @@ pipeline {
         githubPush()  // ✅ Webhook trigger
     }
 
+    environment {
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-sa-key')  // ✅ Use stored GCP service account credentials
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -21,13 +25,22 @@ pipeline {
                 echo 'Docker Build Success'
             }
         }
+
+        stage('Authenticate with GCP') {
+            steps {
+                script {
+                    sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'
+                    sh 'gcloud auth configure-docker asia-south2-docker.pkg.dev'
+                }
+            }
+        }
+
         stage('Tag Docker Image') {
             steps {
                 sh 'docker tag lang-api:latest asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api'
-                sh 'gcloud auth configure-docker \
-    asia-south2-docker.pkg.dev'
             }
         }
+
         stage('Push to Artifact Repository') {
             steps {
                 script {
@@ -37,6 +50,8 @@ pipeline {
                 echo 'Image pushed Successfully'
             }
         }
+    
+
         /*
         stage('Pull Docker Image') {
             steps {
