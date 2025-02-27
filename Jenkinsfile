@@ -24,6 +24,8 @@ pipeline {
         stage('Tag Docker Image') {
             steps {
                 sh 'docker tag lang-api:latest asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api'
+                sh 'gcloud auth configure-docker \
+    asia-south2-docker.pkg.dev'
             }
         }
         stage('Push to Artifact Repository') {
