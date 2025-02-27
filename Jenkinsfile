@@ -52,7 +52,7 @@ pipeline {
         }
     
 
-        /*
+        
         stage('Pull Docker Image') {
             steps {
                 script {
@@ -76,6 +76,6 @@ pipeline {
                 echo 'Deployment Successful'
             }
         }
-        */
+        
     }
 }
