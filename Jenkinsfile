@@ -71,7 +71,7 @@ pipeline {
                     sh 'docker stop lang-api || true'
                     sh 'docker rm lang-api || true'
                     
-                    echo 'Running New Docker Container...'
+                    echo 'Running New Docker Container..'
                     sh 'docker run -d --name lang-api -p 5000:5000 lang-api-final:latest'
                 }
                 echo 'Deployment Successful'
