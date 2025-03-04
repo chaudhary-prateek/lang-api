@@ -59,7 +59,7 @@ pipeline {
                     --region=asia-south2 \
                     --platform=managed \
                     --allow-unauthenticated
-                    --port=5000
+                    --set-env-vars=PORT=5000
                 '''
             }
         }
