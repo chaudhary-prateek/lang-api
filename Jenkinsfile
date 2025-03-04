@@ -55,7 +55,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                gcloud run deploy lang-api-final \
+                    gcloud run deploy lang-api-final \
                     --image=asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final:latest \
                     --region=asia-south2 \
                     --platform=managed \
