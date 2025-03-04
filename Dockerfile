@@ -14,7 +14,8 @@ RUN npm install --only=production
 COPY . .
 
 # Expose the port the application listens on
-EXPOSE 5000
+#EXPOSE 5000
+ENV PORT 5000
 
 # Use a more reliable command to start the server .
 CMD ["npx", "json-server", "--watch", "db.json", "--port", "5000"]
