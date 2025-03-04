@@ -5,24 +5,24 @@ pipeline {
     }
 
     environment {
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('052b1bf8-2b2c-402e-8f35-a9df3f741d9c')  // ✅ Use stored GCP service account credentials
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('31874dac-86f0-4af4-8c82-59ed1d28b92b')  // ✅ GCP service account key
     }
 
     stages {
         stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/chaudhary-prateek/lang-api.git'
-                echo 'Repository cloned successfully'
+                echo '✅ Repository cloned successfully'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo 'Building Docker Image...'
-                    sh 'docker build -t lang-api-final .'
+                    echo '🚀 Building Docker Image...'
+                    sh 'docker build -t lang-api-final .'  // ✅ Use sudo if necessary
                 }
-                echo 'Docker Build Success'
+                echo '✅ Docker Build Success'
             }
         }
 
@@ -37,46 +37,30 @@ pipeline {
 
         stage('Tag Docker Image') {
             steps {
-                sh 'docker tag lang-api:latest asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final'
+                sh 'docker tag lang-api-final:latest asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final'
             }
         }
 
         stage('Push to Artifact Repository') {
             steps {
                 script {
-                    echo 'Pushing Docker Image to Artifact Repository'
+                    echo '📤 Pushing Docker Image to Artifact Repository'
                     sh 'docker push asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final' 
                 }
-                echo 'Image pushed Successfully'
+                echo '✅ Image pushed Successfully'
             }
         }
     
-
-        
-        stage('Pull Docker Image') {
+        stage('Deploy to Cloud Run') {
             steps {
-                script {
-                    echo 'Pull Image from artifact repository'
-                    sh 'docker pull asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final:latest'
-
-                }
-                echo 'Image pulled Successfully'
+                sh '''
+                gcloud run deploy lang-api-final \
+                    --image=asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final:latest \
+                    --region=asia-south2 \
+                    --platform=managed \
+                    --allow-unauthenticated
+                '''
             }
         }
-        
-        stage('Deploy') {
-            steps {
-                script {
-                    echo 'Stopping and Removing Existing Container (if any)...'
-                    sh 'docker stop lang-api || true'
-                    sh 'docker rm lang-api || true'
-                    
-                    echo 'Running New Docker Container..'
-                    sh 'docker run -d --name lang-api -p 5000:5000 lang-api-final:latest'
-                }
-                echo 'Deployment Successful'
-            }
-        }
-        
     }
 }
