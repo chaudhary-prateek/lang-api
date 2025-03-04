@@ -30,7 +30,7 @@ pipeline {
             script {
                 echo '🚀 Creating IAM user...'
                 sh 'gcloud iam service-accounts create jenkins-sa --description="Jenkins Service Account" --display-name="Jenkins Service Account for lang-api"'
-                sh 'gcloud projects add-iam-policy-binding my-project-7805-451310 --member=serviceAccount:my-service-account@my-project-7805-451310.iam.gserviceaccount.com" --role="roles/Cloud.run.admin"
+                sh 'gcloud projects add-iam-policy-binding my-project-7805-451310 --member=serviceAccount:my-service-account@my-project-7805-451310.iam.gserviceaccount.com" --role="roles/run.admin"
         }
 
         stage('Authenticate with GCP') {
