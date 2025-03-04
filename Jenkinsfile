@@ -56,12 +56,13 @@ pipeline {
                 script {
                     sh '''
                     gcloud run deploy lang-api-final \
-                    --image=asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final:latest \
-                    --region=asia-south2 \
-                    --platform=managed \
-                    --allow-unauthenticated
-                    --port=5000
-                '''
+                      --image=asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final:latest \
+                      --region=asia-south2 \
+                      --platform=managed \
+                      --allow-unauthenticated \
+                      --port=5000 \
+                      --set-env-vars=PORT=5000
+                    '''
                 }
             }
         }
