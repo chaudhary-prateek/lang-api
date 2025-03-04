@@ -17,7 +17,4 @@ COPY . .
 EXPOSE 5000
 
 # Use a more reliable command to start the server .
-#CMD ["npx", "json-server", "--watch", "db.json", "--port", "5000"]
-
-# Force the app to listen on port 5000
-CMD ["sh", "-c", "npx json-server --watch db.json --port 5000"]
+CMD ["npx", "json-server", "--watch", "db.json", "--port", "5000"]
