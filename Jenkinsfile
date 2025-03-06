@@ -31,6 +31,18 @@ pipeline {
             }
         }
 
+        stage('Run Tests') {
+            steps {
+                script {
+                    echo '🔍 Running Tests...'
+                    sh '''
+                    docker run --rm $IMAGE_NAME npm test || exit 1
+                    '''
+                }
+                echo '✅ Tests Passed Successfully'
+            }
+        }
+
         stage('Authenticate with GCP') {
             steps {
                 script {
