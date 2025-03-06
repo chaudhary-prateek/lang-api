@@ -63,16 +63,24 @@ pipeline {
         stage('Creating Artifact Repository') {
             steps {
                 script {
-                    echo '🚀 Creating Artifact Repository in GCP...'
-                    sh '''
-                    gcloud artifacts repositories create lang-api \
-                        --repository-format=docker \
-                        --location=asia-south2 \
-                        --description="Artifact repository for lang-api"
-                    '''
+                    echo '🚀 Checking if Artifact Repository exists...'
+                    def repo_exists = sh(script: "gcloud artifacts repositories list --location=$REGION --format='value(name)' | grep -w $REPO_NAME || true", returnStdout: true).trim()
+        
+                    if (repo_exists) {
+                        echo "✅ Repository '$REPO_NAME' already exists. Skipping creation."
+                    } else {
+                        echo "🚀 Creating Artifact Repository..."
+                        sh '''
+                        gcloud artifacts repositories create $REPO_NAME \
+                            --repository-format=docker \
+                            --location=$REGION \
+                            --description="Artifact repository for lang-api"
+                        '''
+                        }
+                    }
                 }
             }
-        }
+
         stage('Push to Artifact Repository') {
             steps {
                 script {
