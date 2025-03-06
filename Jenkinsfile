@@ -60,7 +60,19 @@ pipeline {
                 sh 'docker tag lang-api-final:latest asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final'
             }
         }
-
+        stage('Creating Artifact Repository') {
+            steps {
+                script {
+                    echo '🚀 Creating Artifact Repository in GCP...'
+                    sh '''
+                    gcloud artifacts repositories create lang-api \
+                        --repository-format=docker \
+                        --location=us-central1 \
+                        --description="Artifact repository for lang-api"
+                    '''
+                }
+            }
+        }
         stage('Push to Artifact Repository') {
             steps {
                 script {
