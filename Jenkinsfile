@@ -26,7 +26,7 @@ pipeline {
                 echo '✅ Docker Build Success'
             }
         }
-
+/*
         stage('Creating IAM user') {
             steps {
                 script {
@@ -43,7 +43,7 @@ pipeline {
                 }
             }
         }
-
+*/
         stage('Authenticate with GCP') {
             steps {
                 script {
