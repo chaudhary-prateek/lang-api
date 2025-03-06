@@ -77,7 +77,7 @@ pipeline {
             steps {
                 script {
                     echo '📤 Pushing Docker Image to Artifact Repository'
-                    sh 'docker push asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final' 
+                    sh 'docker push us-central1-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final' 
                 }
                 echo '✅ Image pushed Successfully'
             }
