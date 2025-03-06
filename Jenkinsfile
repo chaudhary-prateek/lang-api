@@ -7,6 +7,10 @@ pipeline {
 
     environment {
         GOOGLE_APPLICATION_CREDENTIALS = credentials('55bdfdab-b0ed-459d-a204-18645b2619a7')  // ✅ GCP service account key
+        PROJECT_ID = 'my-project-7805-451310'  // ✅ Replace with your GCP project ID
+        REGION = 'asia-south2'
+        REPO_NAME = 'lang-api'
+        IMAGE_NAME = 'lang-api-final'
     }
 
     stages {
@@ -21,51 +25,32 @@ pipeline {
             steps {
                 script {
                     echo '🚀 Building Docker Image...'
-                    sh 'docker build -t lang-api-final .'  // ✅ Use sudo if necessary
+                    sh 'docker build -t $IMAGE_NAME .'  // ✅ Use sudo if necessary
                 }
                 echo '✅ Docker Build Success'
             }
         }
-/*
-        stage('Creating IAM user') {
-            steps {
-                script {
-                    echo '🚀 Creating IAM user...'
-                    sh '''
-                    gcloud iam service-accounts create jenkins-sa \
-                        --description="Jenkins Service Account" \
-                        --display-name="Jenkins Service Account for lang-api"
 
-                    gcloud projects add-iam-policy-binding my-project-7805-451310 \
-                        --member="serviceAccount:my-service-account@my-project-7805-451310.iam.gserviceaccount.com" \
-                        --role="roles/run.admin"
-                    '''
-                }
-            }
-        }
-*/
         stage('Authenticate with GCP') {
             steps {
                 script {
                     sh '''
                     gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-                    gcloud auth configure-docker asia-south2-docker.pkg.dev
+                    gcloud auth configure-docker $REGION-docker.pkg.dev
                     '''
                 }
             }
         }
 
-        stage('Tag Docker Image') {
-            steps {
-                sh 'docker tag lang-api-final:latest asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final'
-            }
-        }
         stage('Creating Artifact Repository') {
             steps {
                 script {
                     echo '🚀 Checking if Artifact Repository exists...'
-                    def repo_exists = sh(script: "gcloud artifacts repositories list --location=$REGION --format='value(name)' | grep -w $REPO_NAME || true", returnStdout: true).trim()
-        
+                    def repo_exists = sh(
+                        script: "gcloud artifacts repositories list --location=$REGION --format='value(name)' | grep -w $REPO_NAME || true", 
+                        returnStdout: true
+                    ).trim()
+
                     if (repo_exists) {
                         echo "✅ Repository '$REPO_NAME' already exists. Skipping creation."
                     } else {
@@ -76,16 +61,22 @@ pipeline {
                             --location=$REGION \
                             --description="Artifact repository for lang-api"
                         '''
-                        }
                     }
                 }
             }
+        }
+
+        stage('Tag Docker Image') {
+            steps {
+                sh 'docker tag $IMAGE_NAME:latest $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME'
+            }
+        }
 
         stage('Push to Artifact Repository') {
             steps {
                 script {
                     echo '📤 Pushing Docker Image to Artifact Repository'
-                    sh 'docker push asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final' 
+                    sh 'docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME' 
                 }
                 echo '✅ Image pushed Successfully'
             }
@@ -95,9 +86,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    gcloud run deploy lang-api-final2 \
-                      --image=asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final:latest \
-                      --region=asia-south2 \
+                    gcloud run deploy $IMAGE_NAME \
+                      --image=$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest \
+                      --region=$REGION \
                       --platform=managed \
                       --allow-unauthenticated \
                       --port=5000
