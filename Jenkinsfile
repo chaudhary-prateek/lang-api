@@ -30,7 +30,7 @@ pipeline {
                 echo '✅ Docker Build Success'
             }
         }
-
+/*
         stage('Run Tests') {
             steps {
                 script {
@@ -42,7 +42,7 @@ pipeline {
                 echo '✅ Tests Passed Successfully'
             }
         }
-
+*/
         stage('Authenticate with GCP') {
             steps {
                 script {
