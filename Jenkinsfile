@@ -67,7 +67,7 @@ pipeline {
                     sh '''
                     gcloud artifacts repositories create lang-api \
                         --repository-format=docker \
-                        --location=us-central1 \
+                        --location=asia-south2 \
                         --description="Artifact repository for lang-api"
                     '''
                 }
@@ -77,7 +77,7 @@ pipeline {
             steps {
                 script {
                     echo '📤 Pushing Docker Image to Artifact Repository'
-                    sh 'docker push us-central1-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final' 
+                    sh 'docker push asia-south2-docker.pkg.dev/my-project-7805-451310/lang-api/lang-api-final' 
                 }
                 echo '✅ Image pushed Successfully'
             }
