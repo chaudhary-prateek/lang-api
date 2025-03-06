@@ -1,5 +1,6 @@
 pipeline {
     agent any
+
     triggers {
         githubPush()  // ✅ Webhook trigger
     }
@@ -25,19 +26,31 @@ pipeline {
                 echo '✅ Docker Build Success'
             }
         }
-        stage('Creating IAM user')
-        steps {
-            script {
-                echo '🚀 Creating IAM user...'
-                sh 'gcloud iam service-accounts create jenkins-sa --description="Jenkins Service Account" --display-name="Jenkins Service Account for lang-api"'
-                sh 'gcloud projects add-iam-policy-binding my-project-7805-451310 --member=serviceAccount:my-service-account@my-project-7805-451310.iam.gserviceaccount.com" --role="roles/run.admin"
+
+        stage('Creating IAM user') {
+            steps {
+                script {
+                    echo '🚀 Creating IAM user...'
+                    sh '''
+                    gcloud iam service-accounts create jenkins-sa \
+                        --description="Jenkins Service Account" \
+                        --display-name="Jenkins Service Account for lang-api"
+
+                    gcloud projects add-iam-policy-binding my-project-7805-451310 \
+                        --member="serviceAccount:my-service-account@my-project-7805-451310.iam.gserviceaccount.com" \
+                        --role="roles/run.admin"
+                    '''
+                }
+            }
         }
 
         stage('Authenticate with GCP') {
             steps {
                 script {
-                    sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'
-                    sh 'gcloud auth configure-docker asia-south2-docker.pkg.dev'
+                    sh '''
+                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                    gcloud auth configure-docker asia-south2-docker.pkg.dev
+                    '''
                 }
             }
         }
