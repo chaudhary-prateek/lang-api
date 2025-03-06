@@ -4,9 +4,9 @@ pipeline {
         githubPush()  // ✅ Webhook trigger
     }
 
-    /*environment {
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('31874dac-86f0-4af4-8c82-59ed1d28b92b')  // ✅ GCP service account key
-    }*/
+    environment {
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('415dbcbf-ebd3-4adf-8847-c2a633339f5c')  // ✅ GCP service account key
+    }
 
     stages {
         stage('Clone Repository') {
