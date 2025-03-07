@@ -95,19 +95,19 @@ pipeline {
             }
         }
 
-        stage('Authenticate with GCP') {
-            stage('Authentication with GCP') {
-                environment {
-                    GOOGLE_APPLICATION_CREDENTIALS = credentials('971f730c84b83f2fbb7058c014aa6fe890207c8c')
-                }
-                steps {
-                    script {
-                        sh """
-                        gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-                        """
-                    }
+        stage('Authentication with GCP') {
+            environment {
+                GOOGLE_APPLICATION_CREDENTIALS = credentials('971f730c84b83f2fbb7058c014aa6fe890207c8c')
+            }
+            steps {
+                script {
+                    sh """
+                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                    """
                 }
             }
+        }
+
             /*
             steps {
                 script {
