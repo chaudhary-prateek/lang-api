@@ -16,7 +16,7 @@ pipeline {
     }
 
     stages {
-        stage('Authentication with GCP') {
+        stage('Authenticate with GCP') {
             environment {
                 GOOGLE_APPLICATION_CREDENTIALS = credentials('415dbcbf-ebd3-4adf-8847-c2a633339f5c')
             }
