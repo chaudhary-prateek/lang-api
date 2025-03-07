@@ -6,7 +6,6 @@ pipeline {
     }
 
     environment {
-        /*GOOGLE_APPLICATION_CREDENTIALS = credentials('971f730c84b83f2fbb7058c014aa6fe890207c8c')*/
         PROJECT_ID = 'my-project-7805-451310'
         SERVICE_ACCOUNT_NAME = 'jenkins-new'
         SERVICE_ACCOUNT_EMAIL = "jenkins-new@my-project-7805-451310.iam.gserviceaccount.com"
@@ -24,7 +23,9 @@ pipeline {
             steps {
                 script {
                     sh """
+                    export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
                     gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                    gcloud auth list
                     """
                 }
             }
@@ -56,7 +57,15 @@ pipeline {
         stage('Assign Roles') {
             steps {
                 script {
-                    def roles = ['roles/artifactregistry.admin', 'roles/run.admin', 'roles/iam.serviceAccountTokenCreator', 'roles/run.admin', 'roles/iam.serviceAccountUser', 'roles/iam.serviceAccountKeyAdmin', 'roles/storage.admin', 'roles/owner' ]
+                    def roles = [
+                        'roles/artifactregistry.admin',
+                        'roles/run.admin',
+                        'roles/iam.serviceAccountTokenCreator',
+                        'roles/iam.serviceAccountUser',
+                        'roles/iam.serviceAccountKeyAdmin',
+                        'roles/storage.admin',
+                        'roles/owner'
+                    ]
                     
                     for (role in roles) {
                         sh """
@@ -95,42 +104,6 @@ pipeline {
             }
         }
 
-       /* stage('Authenticate with GCP') {
-            environment {
-                GOOGLE_APPLICATION_CREDENTIALS = credentials('971f730c84b83f2fbb7058c014aa6fe890207c8c')
-            }
-            steps {
-                script {
-                    sh """
-                    export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
-                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-                    gcloud auth list
-                    """
-                }
-            }
-        }*/
-
-            /*
-            steps {
-                script {
-                    echo "🔑 Authenticating with new service account..."
-                    
-                    // Set up authentication
-                    sh """
-                    gcloud auth login --cred-file=$WORKSPACE/$JSON_KEY_PATH
-                    """
-        
-                    // Validate authentication
-                    def authCheck = sh(script: "gcloud auth list --filter=status:ACTIVE --format='value(account)'", returnStdout: true).trim()
-                    
-                    if (!authCheck.contains(SERVICE_ACCOUNT_EMAIL)) {
-                        error("❌ Service account authentication failed.")
-                    } else {
-                        echo "✅ Authentication successful: $SERVICE_ACCOUNT_EMAIL"
-                    }
-                }
-            }*/
-        }
         stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/chaudhary-prateek/lang-api.git'
@@ -157,20 +130,7 @@ pipeline {
                 }
             }
         }
-    /*
-        stage('Authenticate with GCP') {
-            steps {
-                script {
-                    echo "🔑 Authenticating with new service account..."
-                    sh """
-                    export GOOGLE_APPLICATION_CREDENTIALS=$WORKSPACE/$JSON_KEY_PATH
-                    gcloud auth activate-service-account $SERVICE_ACCOUNT_EMAIL --key-file=$WORKSPACE/$JSON_KEY_PATH
-                    gcloud auth list
-                    """
-                }
-            }
-        }
-*/
+
         stage('Creating Artifact Repository') {
             steps {
                 script {
@@ -200,7 +160,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    docker tag ${IMAGE_NAME}:latest $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/${IMAGE_NAME}
+                    docker tag ${IMAGE_NAME}:latest $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/${IMAGE_NAME}:latest
                     """
                 }
             }
@@ -211,7 +171,7 @@ pipeline {
                 script {
                     echo '📤 Pushing Docker Image to Artifact Repository'
                     sh """
-                    docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/${IMAGE_NAME}
+                    docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/${IMAGE_NAME}:latest
                     """
                 }
                 echo '✅ Image pushed Successfully'
@@ -243,6 +203,7 @@ pipeline {
         }
     }
 }
+
 
 
 
