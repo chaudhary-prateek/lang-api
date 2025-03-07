@@ -23,9 +23,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
                     gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-                    gcloud auth list
                     """
                 }
             }
@@ -57,15 +55,7 @@ pipeline {
         stage('Assign Roles') {
             steps {
                 script {
-                    def roles = [
-                        'roles/artifactregistry.admin',
-                        'roles/run.admin',
-                        'roles/iam.serviceAccountTokenCreator',
-                        'roles/iam.serviceAccountUser',
-                        'roles/iam.serviceAccountKeyAdmin',
-                        'roles/storage.admin',
-                        'roles/owner'
-                    ]
+                    def roles = ['roles/artifactregistry.admin', 'roles/run.admin', 'roles/iam.serviceAccountTokenCreator', 'roles/run.admin', 'roles/iam.serviceAccountUser', 'roles/iam.serviceAccountKeyAdmin', 'roles/storage.admin', 'roles/owner' ]
                     
                     for (role in roles) {
                         sh """
@@ -101,6 +91,21 @@ pipeline {
         stage('Archive Key File') {
             steps {
                 archiveArtifacts artifacts: JSON_KEY_PATH, fingerprint: true
+            }
+        }
+
+        stage('Authenticate with GCP') {
+            environment {
+                GOOGLE_APPLICATION_CREDENTIALS = credentials('971f730c84b83f2fbb7058c014aa6fe890207c8c')
+            }
+            steps {
+                script {
+                    sh """
+                    export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
+                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                    gcloud auth list
+                    """
+                }
             }
         }
 
@@ -160,7 +165,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    docker tag ${IMAGE_NAME}:latest $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/${IMAGE_NAME}:latest
+                    docker tag ${IMAGE_NAME}:latest $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/${IMAGE_NAME}
                     """
                 }
             }
@@ -171,7 +176,7 @@ pipeline {
                 script {
                     echo '📤 Pushing Docker Image to Artifact Repository'
                     sh """
-                    docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/${IMAGE_NAME}:latest
+                    docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/${IMAGE_NAME}
                     """
                 }
                 echo '✅ Image pushed Successfully'
@@ -203,6 +208,7 @@ pipeline {
         }
     }
 }
+
 
 
 
