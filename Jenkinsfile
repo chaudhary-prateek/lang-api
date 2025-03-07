@@ -17,7 +17,7 @@ pipeline {
     }
 
     stages {
-        stage('Authenticate with GCP') {
+        stage('Authentication with GCP') {
             steps {
                 script {
                     sh """
