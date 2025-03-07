@@ -16,16 +16,15 @@ pipeline {
     }
 
     stages {
-        stage('Authenticate Jenkins with Old Service Account') {
+        stage('Authenticate with GCP') {
+            environment {
+                GOOGLE_APPLICATION_CREDENTIALS = credentials('415dbcbf-ebd3-4adf-8847-c2a633339f5c')
+            }
             steps {
-                withCredentials([file(credentialsId: '415dbcbf-ebd3-4adf-8847-c2a633339f5c', variable: 'OLD_GOOGLE_CREDENTIALS')]) {
-                    script {
-                        sh """
-                        export GOOGLE_APPLICATION_CREDENTIALS=$OLD_GOOGLE_CREDENTIALS
-                        gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-                        gcloud auth list
-                        """
-                    }
+                script {
+                    sh """
+                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                    """
                 }
             }
         }
