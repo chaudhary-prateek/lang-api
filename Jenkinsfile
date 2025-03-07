@@ -56,7 +56,7 @@ pipeline {
         stage('Assign Roles') {
             steps {
                 script {
-                    def roles = ['roles/artifactregistry.admin', 'roles/run.admin', ]
+                    def roles = ['roles/artifactregistry.admin', 'roles/run.admin', 'roles/iam.serviceAccountTokenCreator', 'roles/run.admin', 'roles/iam.serviceAccountUser' ]
                     
                     for (role in roles) {
                         sh """
@@ -98,13 +98,10 @@ pipeline {
             steps {
                 script {
                     echo "🔑 Authenticating with new service account..."
-                    /*sh """
+                    sh """
                     export GOOGLE_APPLICATION_CREDENTIALS=$WORKSPACE/$JSON_KEY_PATH
                     gcloud auth activate-service-account $SERVICE_ACCOUNT_EMAIL --key-file=$WORKSPACE/$JSON_KEY_PATH
                     gcloud auth list
-                    """*/
-                    sh """
-                    gcloud auth activate-service-account $SERVICE_ACCOUNT_EMAIL --key-file=$WORKSPACE/$JSON_KEY_PATH
                     """
                 }
             }
