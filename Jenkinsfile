@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        /*GOOGLE_APPLICATION_CREDENTIALS = credentials('415dbcbf-ebd3-4adf-8847-c2a633339f5c')*/
+        /*GOOGLE_APPLICATION_CREDENTIALS = credentials('971f730c84b83f2fbb7058c014aa6fe890207c8c')*/
         PROJECT_ID = 'my-project-7805-451310'
         SERVICE_ACCOUNT_NAME = 'jenkins-new'
         SERVICE_ACCOUNT_EMAIL = "jenkins-new@my-project-7805-451310.iam.gserviceaccount.com"
@@ -96,6 +96,19 @@ pipeline {
         }
 
         stage('Authenticate with GCP') {
+            stage('Authentication with GCP') {
+                environment {
+                    GOOGLE_APPLICATION_CREDENTIALS = credentials('971f730c84b83f2fbb7058c014aa6fe890207c8c')
+                }
+                steps {
+                    script {
+                        sh """
+                        gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                        """
+                    }
+                }
+            }
+            /*
             steps {
                 script {
                     echo "🔑 Authenticating with new service account..."
@@ -114,7 +127,7 @@ pipeline {
                         echo "✅ Authentication successful: $SERVICE_ACCOUNT_EMAIL"
                     }
                 }
-            }
+            }*/
         }
         stage('Clone Repository') {
             steps {
