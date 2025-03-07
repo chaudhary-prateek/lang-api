@@ -93,19 +93,7 @@ pipeline {
             }
         }
 */
-        stage('Switch to New Service Account') {
-            steps {
-                withCredentials([file(credentialsId: 'new-service-account-key', variable: 'NEW_GOOGLE_CREDENTIALS')]) {
-                    script {
-                        sh """
-                        export GOOGLE_APPLICATION_CREDENTIALS=$NEW_GOOGLE_CREDENTIALS
-                        gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-                        gcloud auth list
-                        """
-                    }
-                }
-            }
-        }
+
 
         stage('Clone Repository') {
             steps {
@@ -123,7 +111,19 @@ pipeline {
                 echo '✅ Docker Build Success'
             }
         }
-
+        stage('Switch to New Service Account') {
+            steps {
+                withCredentials([file(credentialsId: '971f730c84b83f2fbb7058c014aa6fe890207c8c', variable: 'NEW_GOOGLE_CREDENTIALS')]) {
+                    script {
+                        sh """
+                        export GOOGLE_APPLICATION_CREDENTIALS=$NEW_GOOGLE_CREDENTIALS
+                        gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                        gcloud auth list
+                        """
+                    }
+                }
+            }
+        }
         stage('Authenticate with GCP for Docker') {
             steps {
                 script {
