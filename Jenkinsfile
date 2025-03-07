@@ -30,17 +30,20 @@ pipeline {
         stage('Check and Create Service Account') {
             steps {
                 script {
-                    def accountExists = sh(script: """
-                        gcloud iam service-accounts list --filter="email=${SERVICE_ACCOUNT_EMAIL}" --format="value(email)"
-                    """, returnStdout: true).trim()
-
+                    def accountExists = sh(
+                        script: """
+                            gcloud iam service-accounts list --filter="email=${SERVICE_ACCOUNT_EMAIL}" --format="value(email)" || echo ""
+                        """,
+                        returnStdout: true
+                    ).trim()
+        
                     if (accountExists) {
-                        echo "✅ Service account already exists: $SERVICE_ACCOUNT_EMAIL"
+                        echo "✅ Service account already exists: ${SERVICE_ACCOUNT_EMAIL}"
                     } else {
-                        echo "🚀 Creating service account: $SERVICE_ACCOUNT_NAME"
+                        echo "🚀 Creating service account: ${SERVICE_ACCOUNT_NAME}"
                         sh """
-                        gcloud iam service-accounts create $SERVICE_ACCOUNT_NAME \
-                            --display-name "Jenkins Service Account"
+                            gcloud iam service-accounts create ${SERVICE_ACCOUNT_NAME} \
+                                --display-name "Jenkins Service Account"
                         """
                     }
                 }
