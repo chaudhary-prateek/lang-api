@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('415dbcbf-ebd3-4adf-8847-c2a633339f5c')
+        /*GOOGLE_APPLICATION_CREDENTIALS = credentials('415dbcbf-ebd3-4adf-8847-c2a633339f5c')*/
         PROJECT_ID = 'my-project-7805-451310'
         SERVICE_ACCOUNT_NAME = 'jenkins-new'
         SERVICE_ACCOUNT_EMAIL = "jenkins-new@my-project-7805-451310.iam.gserviceaccount.com"
@@ -21,7 +21,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                    gcloud auth activate-service-account --key-file=credentials('415dbcbf-ebd3-4adf-8847-c2a633339f5c')
                     """
                 }
             }
@@ -115,6 +115,16 @@ pipeline {
                     sh """
                     gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
                     """
+                }
+            }
+        }
+        stage('Authenticate with GCP') {
+            steps {
+                script {
+                    sh '''
+                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                    gcloud auth configure-docker $REGION-docker.pkg.dev
+                    '''
                 }
             }
         }
