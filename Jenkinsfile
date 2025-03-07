@@ -98,15 +98,23 @@ pipeline {
             steps {
                 script {
                     echo "🔑 Authenticating with new service account..."
+                    
+                    // Set up authentication
                     sh """
-                    export GOOGLE_APPLICATION_CREDENTIALS=$WORKSPACE/$JSON_KEY_PATH
                     gcloud auth activate-service-account $SERVICE_ACCOUNT_EMAIL --key-file=$WORKSPACE/$JSON_KEY_PATH
-                    gcloud auth list
                     """
+        
+                    // Validate authentication
+                    def authCheck = sh(script: "gcloud auth list --filter=status:ACTIVE --format='value(account)'", returnStdout: true).trim()
+                    
+                    if (!authCheck.contains(SERVICE_ACCOUNT_EMAIL)) {
+                        error("❌ Service account authentication failed.")
+                    } else {
+                        echo "✅ Authentication successful: $SERVICE_ACCOUNT_EMAIL"
+                    }
                 }
             }
         }
-
         stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/chaudhary-prateek/lang-api.git'
