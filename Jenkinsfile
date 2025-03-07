@@ -94,6 +94,18 @@ pipeline {
                 archiveArtifacts artifacts: JSON_KEY_PATH, fingerprint: true
             }
         }
+        stage('Authenticate with GCP') {
+            steps {
+                script {
+                    echo "🔑 Authenticating with new service account..."
+                    sh """
+                    export GOOGLE_APPLICATION_CREDENTIALS=$WORKSPACE/$JSON_KEY_PATH
+                    gcloud auth activate-service-account $SERVICE_ACCOUNT_EMAIL --key-file=$WORKSPACE/$JSON_KEY_PATH
+                    gcloud auth list
+                    """
+                }
+            }
+        }
 
         stage('Clone Repository') {
             steps {
@@ -120,7 +132,7 @@ pipeline {
                     """
                 }
             }
-        }
+        }/*
         stage('Authenticate with GCP') {
             steps {
                 script {
@@ -133,7 +145,7 @@ pipeline {
                 }
             }
         }
-
+*/
         stage('Creating Artifact Repository') {
             steps {
                 script {
