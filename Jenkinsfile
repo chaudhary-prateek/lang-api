@@ -95,7 +95,7 @@ pipeline {
             }
         }
 
-        stage('Authenticate with GCP') {
+       /* stage('Authenticate with GCP') {
             environment {
                 GOOGLE_APPLICATION_CREDENTIALS = credentials('971f730c84b83f2fbb7058c014aa6fe890207c8c')
             }
@@ -108,7 +108,7 @@ pipeline {
                     """
                 }
             }
-        }
+        }*/
 
             /*
             steps {
@@ -242,6 +242,7 @@ pipeline {
             echo "❌ Pipeline failed. Check logs for errors."
         }
     }
+}
 
 
 
