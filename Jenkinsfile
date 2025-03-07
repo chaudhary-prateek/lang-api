@@ -72,25 +72,19 @@ pipeline {
         stage('Generate JSON Key') {
             steps {
                 script {
-                    echo "🔍 Checking for existing service account keys..."
-                    
-                    // List existing keys (ignoring the first key, which is the default GCP key)
                     def existingKeys = sh(script: """
                         gcloud iam service-accounts keys list --iam-account=$SERVICE_ACCOUNT_EMAIL --format="value(name)"
                     """, returnStdout: true).trim()
-                    
+        
                     if (existingKeys) {
-                        echo "🗑️ Deleting existing keys before creating a new one..."
-                        for (key in existingKeys.split("\n")) {
-                            sh "gcloud iam service-accounts keys delete $key --iam-account=$SERVICE_ACCOUNT_EMAIL --quiet"
-                        }
-                    }
-                    
-                    echo "🔑 Generating a new key..."
-                    sh """
+                        echo "✅ Existing key found. Skipping key generation."
+                    } else {
+                        echo "🔑 No key found. Generating a new key..."
+                        sh """
                         gcloud iam service-accounts keys create $WORKSPACE/$JSON_KEY_PATH \
-                        --iam-account=$SERVICE_ACCOUNT_EMAIL
-                    """
+                            --iam-account=$SERVICE_ACCOUNT_EMAIL
+                        """
+                    }
                 }
             }
         }
@@ -106,23 +100,18 @@ pipeline {
                 script {
                     echo "🔑 Authenticating with new service account..."
                     
+                    // Set up authentication
                     sh """
-                    export GOOGLE_APPLICATION_CREDENTIALS=$WORKSPACE/$JSON_KEY_PATH
-                    gcloud auth activate-service-account $SERVICE_ACCOUNT_EMAIL --key-file=$WORKSPACE/$JSON_KEY_PATH
-                    gcloud auth list
+                    gcloud auth login --cred-file=$WORKSPACE/$JSON_KEY_PATH
                     """
-                }
-            }
-        }
-        stage('Verify Authentication') {
-            steps {
-                script {
-                    def activeAccount = sh(script: "gcloud auth list --filter=status:ACTIVE --format='value(account)'", returnStdout: true).trim()
+        
+                    // Validate authentication
+                    def authCheck = sh(script: "gcloud auth list --filter=status:ACTIVE --format='value(account)'", returnStdout: true).trim()
                     
-                    if (activeAccount != SERVICE_ACCOUNT_EMAIL) {
-                        error("❌ Authentication failed! Expected: $SERVICE_ACCOUNT_EMAIL, but found: $activeAccount")
+                    if (!authCheck.contains(SERVICE_ACCOUNT_EMAIL)) {
+                        error("❌ Service account authentication failed.")
                     } else {
-                        echo "✅ Successfully authenticated as: $SERVICE_ACCOUNT_EMAIL"
+                        echo "✅ Authentication successful: $SERVICE_ACCOUNT_EMAIL"
                     }
                 }
             }
