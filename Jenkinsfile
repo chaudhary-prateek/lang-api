@@ -101,7 +101,7 @@ pipeline {
                     
                     // Set up authentication
                     sh """
-                    gcloud auth activate-service-account $SERVICE_ACCOUNT_EMAIL --key-file=$WORKSPACE/$JSON_KEY_PATH
+                    gcloud auth login --cred-file=$WORKSPACE/$JSON_KEY_PATH
                     """
         
                     // Validate authentication
