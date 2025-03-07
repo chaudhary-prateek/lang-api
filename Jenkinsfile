@@ -6,16 +6,16 @@ pipeline {
     }
 
     environment {
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('415dbcbf-ebd3-4adf-8847-c2a633339f5c')  // ✅ GCP service account key
-        PROJECT_ID = 'my-project-7805-451310'  // ✅ Replace with your GCP project ID
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('415dbcbf-ebd3-4adf-8847-c2a633339f5c')
+        PROJECT_ID = 'my-project-7805-451310'
         SERVICE_ACCOUNT_NAME = 'jenkins-new'
         SERVICE_ACCOUNT_EMAIL = "jenkins-new@my-project-7805-451310.iam.gserviceaccount.com"
         JSON_KEY_PATH = 'jenkins-sa-key.json'
         REGION = 'asia-south2'
         REPO_NAME = 'lang-api'
         IMAGE_NAME = 'lang-api-final'
-        
     }
+
     stages {
         stage('Authenticate with GCP') {
             steps {
@@ -79,16 +79,6 @@ pipeline {
                 archiveArtifacts artifacts: JSON_KEY_PATH, fingerprint: true
             }
         }
-    }
-
-    post {
-        success {
-            echo "✅ Service account created and roles assigned successfully!"
-        }
-        failure {
-            echo "❌ Pipeline failed. Check logs for errors."
-        }
-    }
 
         stage('Clone Repository') {
             steps {
@@ -101,31 +91,18 @@ pipeline {
             steps {
                 script {
                     echo '🚀 Building Docker Image...'
-                    sh 'docker build -t $IMAGE_NAME .'  // ✅ Use sudo if necessary
+                    sh "docker build -t ${IMAGE_NAME} ."
                 }
                 echo '✅ Docker Build Success'
             }
         }
-/*
-        stage('Run Tests') {
+
+        stage('Authenticate with GCP for Docker') {
             steps {
                 script {
-                    echo '🔍 Running Tests...'
-                    sh '''
-                    docker run --rm $IMAGE_NAME npm test || exit 1
-                    '''
-                }
-                echo '✅ Tests Passed Successfully'
-            }
-        }
-*/
-        stage('Authenticate with GCP') {
-            steps {
-                script {
-                    sh '''
-                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-                    gcloud auth configure-docker $REGION-docker.pkg.dev
-                    '''
+                    sh """
+                    gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+                    """
                 }
             }
         }
@@ -143,12 +120,12 @@ pipeline {
                         echo "✅ Repository '$REPO_NAME' already exists. Skipping creation."
                     } else {
                         echo "🚀 Creating Artifact Repository..."
-                        sh '''
+                        sh """
                         gcloud artifacts repositories create $REPO_NAME \
                             --repository-format=docker \
                             --location=$REGION \
                             --description="Artifact repository for lang-api"
-                        '''
+                        """
                     }
                 }
             }
@@ -156,7 +133,11 @@ pipeline {
 
         stage('Tag Docker Image') {
             steps {
-                sh 'docker tag $IMAGE_NAME:latest $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME'
+                script {
+                    sh """
+                    docker tag ${IMAGE_NAME}:latest $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/${IMAGE_NAME}
+                    """
+                }
             }
         }
 
@@ -164,7 +145,9 @@ pipeline {
             steps {
                 script {
                     echo '📤 Pushing Docker Image to Artifact Repository'
-                    sh 'docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME' 
+                    sh """
+                    docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/${IMAGE_NAME}
+                    """
                 }
                 echo '✅ Image pushed Successfully'
             }
@@ -173,19 +156,29 @@ pipeline {
         stage('Deploy to Cloud Run') {
             steps {
                 script {
-                    sh '''
-                    gcloud run deploy $IMAGE_NAME \
-                      --image=$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest \
+                    sh """
+                    gcloud run deploy ${IMAGE_NAME} \
+                      --image=$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/${IMAGE_NAME}:latest \
                       --region=$REGION \
                       --platform=managed \
                       --allow-unauthenticated \
                       --port=5000
-                    '''
+                    """
                 }
             }
         }
     }
+
+    post {
+        success {
+            echo "✅ Pipeline executed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check logs for errors."
+        }
+    }
 }
+
 
 
 
