@@ -94,15 +94,13 @@ pipeline {
             }
         }
 */
-        stage('Authenticate with GCP') {
-            environment {
-                sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'
-            }
+        stage('Authentication with GCP') {
             steps {
-                script {
-                    sh """
-                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-                    """
+                withCredentials([file(credentialsId: '415dbcbf-ebd3-4adf-8847-c2a633339f5c', variable: 'GOOGLE_CREDENTIALS')]) {
+                    script {
+                        sh 'gcloud auth activate-service-account --key-file=$GOOGLE_CREDENTIALS'
+                        sh 'gcloud auth list'
+                    }
                 }
             }
         }
