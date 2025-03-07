@@ -94,7 +94,7 @@ pipeline {
                 archiveArtifacts artifacts: JSON_KEY_PATH, fingerprint: true
             }
         }
-        /*
+
         stage('Authenticate with GCP') {
             steps {
                 script {
@@ -115,7 +115,7 @@ pipeline {
                     }
                 }
             }
-        }*/
+        }
         stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/chaudhary-prateek/lang-api.git'
