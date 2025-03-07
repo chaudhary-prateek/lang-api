@@ -66,10 +66,19 @@ pipeline {
         stage('Generate JSON Key') {
             steps {
                 script {
-                    sh """
-                    gcloud iam service-accounts keys create $WORKSPACE/$JSON_KEY_PATH \
-                        --iam-account=$SERVICE_ACCOUNT_EMAIL
-                    """
+                    def existingKeys = sh(script: """
+                        gcloud iam service-accounts keys list --iam-account=$SERVICE_ACCOUNT_EMAIL --format="value(name)"
+                    """, returnStdout: true).trim()
+        
+                    if (existingKeys) {
+                        echo "✅ Existing key found. Skipping key generation."
+                    } else {
+                        echo "🔑 No key found. Generating a new key..."
+                        sh """
+                        gcloud iam service-accounts keys create $WORKSPACE/$JSON_KEY_PATH \
+                            --iam-account=$SERVICE_ACCOUNT_EMAIL
+                        """
+                    }
                 }
             }
         }
