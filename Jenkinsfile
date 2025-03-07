@@ -18,10 +18,13 @@ pipeline {
 
     stages {
         stage('Authentication with GCP') {
+            environment {
+                GOOGLE_APPLICATION_CREDENTIALS = credentials('415dbcbf-ebd3-4adf-8847-c2a633339f5c')
+            }
             steps {
                 script {
                     sh """
-                    gcloud auth activate-service-account --key-file=credentials('415dbcbf-ebd3-4adf-8847-c2a633339f5c')
+                    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
                     """
                 }
             }
