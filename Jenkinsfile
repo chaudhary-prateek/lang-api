@@ -7,8 +7,8 @@ pipeline {
 
     environment {
         PROJECT_ID = 'my-project-7805-451310'
-        SERVICE_ACCOUNT_NAME = 'jenkins-new'
-        SERVICE_ACCOUNT_EMAIL = "jenkins-new@my-project-7805-451310.iam.gserviceaccount.com"
+        SERVICE_ACCOUNT_NAME = 'extra'
+        SERVICE_ACCOUNT_EMAIL = "extra-929@my-project-7805-451310.iam.gserviceaccount.com"
         JSON_KEY_PATH = 'jenkins-sa-key.json'
         REGION = 'asia-south2'
         REPO_NAME = 'lang-api'
@@ -28,7 +28,7 @@ pipeline {
                 }
             }
         }
-
+/*
         stage('Check and Create Service Account') {
             steps {
                 script {
@@ -67,7 +67,7 @@ pipeline {
                 }
             }
         }
-/*
+
         stage('Generate JSON Key') {
             steps {
                 script {
