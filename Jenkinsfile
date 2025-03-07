@@ -67,7 +67,7 @@ pipeline {
                 }
             }
         }
-
+/*
         stage('Generate JSON Key') {
             steps {
                 script {
@@ -93,7 +93,7 @@ pipeline {
                 archiveArtifacts artifacts: JSON_KEY_PATH, fingerprint: true
             }
         }
-
+*/
         stage('Authenticate with GCP') {
             environment {
                 GOOGLE_APPLICATION_CREDENTIALS = credentials('971f730c84b83f2fbb7058c014aa6fe890207c8c')
