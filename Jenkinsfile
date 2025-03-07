@@ -50,7 +50,7 @@ pipeline {
         stage('Assign Roles') {
             steps {
                 script {
-                    def roles = ['roles/artifactregistry.admin', 'roles/run.admin']
+                    def roles = ['roles/artifactregistry.admin', 'roles/run.admin', 'roles/Project IAM Admin']
                     
                     for (role in roles) {
                         sh """
