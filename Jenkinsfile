@@ -98,10 +98,13 @@ pipeline {
             steps {
                 script {
                     echo "🔑 Authenticating with new service account..."
-                    sh """
+                    /*sh """
                     export GOOGLE_APPLICATION_CREDENTIALS=$WORKSPACE/$JSON_KEY_PATH
                     gcloud auth activate-service-account $SERVICE_ACCOUNT_EMAIL --key-file=$WORKSPACE/$JSON_KEY_PATH
                     gcloud auth list
+                    """*/
+                    sh """
+                    gcloud auth activate-service-account $SERVICE_ACCOUNT_EMAIL --key-file=$WORKSPACE/$JSON_KEY_PATH
                     """
                 }
             }
