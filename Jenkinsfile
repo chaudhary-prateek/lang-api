@@ -27,18 +27,6 @@ pipeline {
                 }
             }
         }
-        stage('Switch to 1 Service Account') {
-            steps {
-                withCredentials([file(credentialsId: 'fe9fc55e-81fc-4271-a54d-2d42123f9951', variable: 'NEW_GOOGLE_CREDENTIALS')]) {
-                    script {
-                        sh """
-                        gcloud auth activate-service-account --key-file="$NEW_GOOGLE_CREDENTIALS"
-                        gcloud auth list
-                        """
-                    }
-                }
-            }
-        }
 /*
         stage('Check and Create Service Account') {
             steps {
@@ -125,7 +113,7 @@ pipeline {
         }
         stage('Switch to New Service Account') {
             steps {
-                withCredentials([file(credentialsId: '96074944e4f29bfa51e4b7a48ed0539a93a20d35', variable: 'NEW_GOOGLE_CREDENTIALS')]) {
+                withCredentials([file(credentialsId: 'fe9fc55e-81fc-4271-a54d-2d42123f9951', variable: 'NEW_GOOGLE_CREDENTIALS')]) {
                     script {
                         sh """
                         gcloud auth activate-service-account --key-file="$NEW_GOOGLE_CREDENTIALS"
