@@ -27,7 +27,7 @@ pipeline {
                 }
             }
         }
-        stage('Switch to New Service Account') {
+        stage('Switch to 1 Service Account') {
             steps {
                 withCredentials([file(credentialsId: '96074944e4f29bfa51e4b7a48ed0539a93a20d35', variable: 'NEW_GOOGLE_CREDENTIALS')]) {
                     script {
