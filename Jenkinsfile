@@ -113,7 +113,7 @@ pipeline {
         }
         stage('Switch to New Service Account') {
             steps {
-                withCredentials([file(credentialsId: '971f730c84b83f2fbb7058c014aa6fe890207c8c', variable: 'NEW_GOOGLE_CREDENTIALS')]) {
+                withCredentials([file(credentialsId: '96074944e4f29bfa51e4b7a48ed0539a93a20d35', variable: 'NEW_GOOGLE_CREDENTIALS')]) {
                     script {
                         env.GOOGLE_APPLICATION_CREDENTIALS = NEW_GOOGLE_CREDENTIALS
                         sh """
