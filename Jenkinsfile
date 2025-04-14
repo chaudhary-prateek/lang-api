@@ -1,6 +1,12 @@
 pipeline {
     agent any
-
+    parameters {
+        choice(
+            name: 'BRANCH',
+            choices: ['main', 'develop', 'feature-1'],
+            description: 'Select the branch to deploy'
+        )
+    }
     triggers {
         githubPush()  // ✅ Webhook trigger
     }
