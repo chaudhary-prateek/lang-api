@@ -1,10 +1,13 @@
 {
   "name": "json-server-api",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "json-server --watch db.json --port 5000"
+    "start": "json-server --watch db.json --port 5000",
+    "semantic-release": "semantic-release",
+    "prepare": "husky install",
+    "release": "semantic-release"
   },
   "keywords": [],
   "author": "",
@@ -22,7 +25,13 @@
     "@semantic-release/npm": "^12.0.1",
     "@semantic-release/release-notes-generator": "^14.0.3",
     "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
     "husky": "^9.1.7",
     "semantic-release": "^24.2.5"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   }
 }
