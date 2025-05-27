@@ -1,6 +1,7 @@
 // release.config.js
 module.exports = {
     branches: ['main'],
+    REPO_URL: ['https://github.com/chaudhary-prateek/lang-api.git']
     plugins: [
       '@semantic-release/commit-analyzer',
       '@semantic-release/release-notes-generator',
