@@ -1,5 +1,6 @@
+// release.config.js
 module.exports = {
-    repositoryUrl: "https://github.com/chaudhary-prateek/lang-api", // ✅ your actual repo URL
+    repositoryUrl: "https://github.com/chaudhary-prateek/lang-api",
     branches: ["main"],
     plugins: [
       "@semantic-release/commit-analyzer",
@@ -10,4 +11,3 @@ module.exports = {
       "@semantic-release/git"
     ]
   };
-  
