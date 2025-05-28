@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/chaudhary-prateek/lang-api/compare/v1.0.0...v1.0.1) (2025-05-28)
+
+
+### Bug Fixes
+
+* handle undefined API response in translation module ([7db5b49](https://github.com/chaudhary-prateek/lang-api/commit/7db5b49abde04b382d4a0101614926d008056130))
+
 # 1.0.0 (2025-05-28)
 
 
