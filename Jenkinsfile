@@ -66,14 +66,11 @@ pipeline {
             gcloud secrets versions access latest --secret="${SERVICE_NAME}" > ${SERVICE_NAME}.env || touch ${SERVICE_NAME}.env
     
             # Combine in dotenv format for Docker
-            cat common.env ${SERVICE_NAME}.env > raw.env
-    
-            # Convert to YAML format for Cloud Run
-            awk -F= '{ print \$1 ": " \$2 }' raw.env > .env
+          #  cat common.env ${SERVICE_NAME}.env > raw.env
     
             # Optional: show preview
             echo "=== raw.env (for Docker build) ==="
-            cat raw.env
+           # cat raw.env
             echo "=== .env (for Cloud Run) ==="
             cat .env
           """
@@ -83,12 +80,20 @@ pipeline {
 
     stage('Convert .env to env.yaml') {
       steps {
-        writeFile file: 'convert_env.sh', text: '''
-        #!/bin/bash
+        writeFile file: 'convert_env.sh', text: '''#!/bin/bash
         echo "" > env.yaml
-        while IFS='=' read -r key value || [ -n "$key" ]; do
-          [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
-          value="${value//\"/\\\"}"     # escape double quotes
+        while IFS= read -r line || [ -n "$line" ]; do
+          # Skip empty lines and comments
+          [[ "$line" =~ ^#.*$ || -z "$line" ]] && continue
+        
+          # Parse key and value
+          key="${line%%=*}"
+          value="${line#*=}"
+        
+          # Escape YAML-sensitive characters (quotes, colons)
+          key="${key//\"/\\\"}"
+          value="${value//\"/\\\"}"
+        
           echo "$key: \"$value\"" >> env.yaml
         done < .env
         '''
