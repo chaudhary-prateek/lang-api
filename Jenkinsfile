@@ -84,15 +84,14 @@ pipeline {
     stage('Convert .env to env.yaml') {
       steps {
         writeFile file: 'convert_env.sh', text: '''
-    #!/bin/sh
-    echo "" > env.yaml
-    while IFS='=' read -r key value || [ -n "$key" ]; do
-      [ -z "$key" ] && continue
-      echo "$key" | grep -q '^#' && continue
-      escaped_value=$(printf "%s" "$value" | sed 's/"/\\"/g')
-      echo "$key: \\"$escaped_value\\"" >> env.yaml
-    done < .env
-    '''
+        #!/bin/bash
+        echo "" > env.yaml
+        while IFS='=' read -r key value || [ -n "$key" ]; do
+          [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+          value="${value//\"/\\\"}"     # escape double quotes
+          echo "$key: \"$value\"" >> env.yaml
+        done < .env
+        '''
         sh 'chmod +x convert_env.sh && ./convert_env.sh'
         sh 'echo "----- env.yaml Contents -----" && cat env.yaml'
       }
