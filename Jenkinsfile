@@ -128,7 +128,7 @@ pipeline {
               --region=${REGION} \
               --platform=managed \
               --allow-unauthenticated \
-              --set-env-vars-file=.env
+              --env-vars-file=.env
           """
         }
       }
