@@ -3,12 +3,10 @@ pipeline {
 
   environment {
     PROJECT_ID = 'mystical-melody-463806-k9'
-    REGION = 'asia-south2' // e.g., us-central1
+    REGION = 'asia-south2'
     SERVICE_NAME = 'lang-api'
-    ARTIFACT_REPO = 'asia-south2-docker.pkg.dev/mystical-melody-463806-k9/lang-api' // e.g., us-central1-docker.pkg.dev/my-project/my-repo
+    ARTIFACT_REPO = 'asia-south2-docker.pkg.dev/mystical-melody-463806-k9/lang-api'
     IMAGE_NAME = "${SERVICE_NAME}"
-    /*SECRET_SA_KEY = credentials('gcp-secret-access-key')
-    DEPLOY_SA_KEY = credentials('gcp-deploy-access-key')*/
   }
 
   parameters {
@@ -17,19 +15,19 @@ pipeline {
       type: 'PT_BRANCH',
       defaultValue: 'main',
       description: 'Select the Git branch to use',
-      branchFilter: 'origin/(.*)',             // Only matches origin/ branches
+      branchFilter: 'origin/(.*)',
       useRepository: 'https://github.com/chaudhary-prateek/lang-api.git',
       sortMode: 'DESCENDING',
       selectedValue: 'NONE',
     )
 
     gitParameter(
-                name: 'Tag',
-                type: 'PT_TAG',
-                tagFilter: '',
-                defaultValue: 'NONE',
-                selectedValue: 'NONE',
-                description: 'Select a tag'
+      name: 'TAG',
+      type: 'PT_TAG',
+      tagFilter: '',
+      defaultValue: 'NONE',
+      selectedValue: 'NONE',
+      description: 'Select a tag'
     )
   }
 
@@ -39,13 +37,7 @@ pipeline {
         git branch: "${params.BRANCH}", url: 'https://github.com/chaudhary-prateek/lang-api.git'
       }
     }
-/*
-    stage('Build Java Project') {
-      steps {
-        sh 'mvn clean package -Dmaven.test.skip=true'
-      }
-    }
-*/
+
     stage('Auth to GCP (Secret Access)') {
       steps {
         withCredentials([file(credentialsId: 'gcp-secret-access-key', variable: 'SECRET_FILE')]) {
@@ -57,28 +49,41 @@ pipeline {
       }
     }
 
-    stage('Fetch & Combine Secrets') {
+    stage('Fetch & Convert Secrets') {
       steps {
         script {
           def branchName = "${params.BRANCH}".toLowerCase()
+
           sh """
             gcloud secrets versions access latest --secret="common" > common.env || touch common.env
             gcloud secrets versions access latest --secret="${SERVICE_NAME}" > ${SERVICE_NAME}.env || touch ${SERVICE_NAME}.env
-    
-            # Combine in dotenv format for Docker
-          #  cat common.env ${SERVICE_NAME}.env > raw.env
-    
-            # Optional: show preview
-            echo "=== raw.env (for Docker build) ==="
-           # cat raw.env
-            echo "=== .env (for Cloud Run) ==="
+
+            cat common.env ${SERVICE_NAME}.env > .env
+            rm common.env ${SERVICE_NAME}.env
+
+            echo "=== .env (for Docker build) ==="
             cat .env
           """
+
+          // Write the shell script to convert .env to env.yaml
+          writeFile file: 'convert_env.sh', text: '''#!/bin/bash
+echo "" > env.yaml
+while IFS= read -r line || [ -n "$line" ]; do
+  if [[ -z "$line" || "$line" =~ ^# ]]; then
+    continue
+  fi
+  key="${line%%=*}"
+  value="${line#*=}"
+  value="${value//\"/\\\"}"
+  echo "$key: \\"$value\\"" >> env.yaml
+done < .env
+'''
+
+          sh 'chmod +x convert_env.sh && ./convert_env.sh'
+          sh 'echo "=== env.yaml (for Cloud Run) ===" && cat env.yaml'
         }
       }
     }
-
-
 
     stage('Build Docker Image') {
       steps {
@@ -125,13 +130,14 @@ pipeline {
               --region=${REGION} \
               --platform=managed \
               --allow-unauthenticated \
-              --env-vars-file=.env
+              --env-vars-file=env.yaml
           """
         }
       }
     }
   }
 }
+
 
 
 
