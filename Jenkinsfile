@@ -62,15 +62,27 @@ pipeline {
         script {
           def branchName = "${params.BRANCH}".toLowerCase()
           sh """
+            echo "Fetching 'common' secret..."
             gcloud secrets versions access latest --secret="common" > common.env || touch common.env
+            echo "Fetching '${SERVICE_NAME}' secret..."
             gcloud secrets versions access latest --secret="${SERVICE_NAME}" > ${SERVICE_NAME}.env || touch ${SERVICE_NAME}.env
+    
+            echo "🧪 Contents of common.env:"
+            cat common.env || echo "common.env not found"
+    
+            echo "🧪 Contents of ${SERVICE_NAME}.env:"
+            cat ${SERVICE_NAME}.env || echo "${SERVICE_NAME}.env not found"
+    
             cat common.env ${SERVICE_NAME}.env > .env
-            cat .env
+            echo "📂 Final .env file:"
+            cat .env || echo ".env is empty or missing"
+    
             rm common.env ${SERVICE_NAME}.env
           """
         }
       }
     }
+
 
     stage('Build Docker Image') {
       steps {
