@@ -74,28 +74,28 @@ pipeline {
           writeFile file: 'convert_env.sh', text: '''#!/bin/bash
     echo "" > env.yaml
     
-writeFile file: 'convert_env.sh', text: '''#!/bin/bash
-echo "" > env.yaml
-
-while IFS= read -r line || [ -n "$line" ]; do
-  # Skip empty lines and comments
-  [[ -z "$line" || "$line" =~ ^# ]] && continue
-
-  key="${line%%=*}"
-  value="${line#*=}"
-
-  # Remove wrapping quotes if any
-  value="${value%\"}"
-  value="${value#\"}"
-  value="${value%\'}"
-  value="${value#\'}"
-
-  # Escape inner double quotes
-  value="${value//\"/\\\"}"
-
-  printf '%s: "%s"\\n' "$key" "$value" >> env.yaml
-done < .env
-'''
+    writeFile file: 'convert_env.sh', text: '''#!/bin/bash
+    echo "" > env.yaml
+    
+    while IFS= read -r line || [ -n "$line" ]; do
+      # Skip empty lines and comments
+      [[ -z "$line" || "$line" =~ ^# ]] && continue
+    
+      key="${line%%=*}"
+      value="${line#*=}"
+    
+      # Remove wrapping quotes if any
+      value="${value%\"}"
+      value="${value#\"}"
+      value="${value%\'}"
+      value="${value#\'}"
+    
+      # Escape inner double quotes
+      value="${value//\"/\\\"}"
+    
+      printf '%s: "%s"\\n' "$key" "$value" >> env.yaml
+    done < .env
+    '''
     
           // Execute conversion
           sh 'chmod +x convert_env.sh && ./convert_env.sh'
