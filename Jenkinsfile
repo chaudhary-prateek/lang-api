@@ -85,20 +85,14 @@ pipeline {
       steps {
         writeFile file: 'convert_env.sh', text: '''
     #!/bin/sh
-    
     echo "" > env.yaml
-    while IFS='=' read -r key value; do
-      # Skip empty lines and comments
+    while IFS='=' read -r key value || [ -n "$key" ]; do
       [ -z "$key" ] && continue
       echo "$key" | grep -q '^#' && continue
-    
-      # Escape double quotes in value
       escaped_value=$(printf "%s" "$value" | sed 's/"/\\"/g')
-    
       echo "$key: \\"$escaped_value\\"" >> env.yaml
     done < .env
     '''
-    
         sh 'chmod +x convert_env.sh && ./convert_env.sh'
       }
     }
