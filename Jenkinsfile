@@ -99,6 +99,7 @@ pipeline {
           sh '''
             gcloud auth activate-service-account --key-file=$DEPLOY_FILE
             gcloud config set project $PROJECT_ID
+            gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
           '''
         }
       }
