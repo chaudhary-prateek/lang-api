@@ -94,6 +94,7 @@ pipeline {
     done < .env
     '''
         sh 'chmod +x convert_env.sh && ./convert_env.sh'
+        cat env.yaml
       }
     }
 
