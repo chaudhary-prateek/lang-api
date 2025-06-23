@@ -27,7 +27,8 @@ pipeline {
                 name: 'Tag',
                 type: 'PT_TAG',
                 tagFilter: '',
-                defaultValue: '',
+                defaultValue: 'NONE',
+                selectedValue: 'NONE',
                 description: 'Select a tag'
     )
   }
@@ -35,7 +36,7 @@ pipeline {
   stages {
     stage('Checkout Code') {
       steps {
-        git branch: "${params.BRANCH}", url: 'git@github.com:chaudhary-prateek/lang-api.git'
+        git branch: "${params.BRANCH}", url: 'https://github.com/chaudhary-prateek/lang-api.git'
       }
     }
 
