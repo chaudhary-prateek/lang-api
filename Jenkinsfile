@@ -2,10 +2,10 @@ pipeline {
   agent any
 
   environment {
-    PROJECT_ID = 'your-gcp-project-id'
-    REGION = 'your-region' // e.g., us-central1
-    SERVICE_NAME = 'your-cloud-run-service'
-    ARTIFACT_REPO = 'your-repo' // e.g., us-central1-docker.pkg.dev/my-project/my-repo
+    PROJECT_ID = 'mystical-melody-463806-k9'
+    REGION = 'asia-south2' // e.g., us-central1
+    SERVICE_NAME = 'lang-api'
+    ARTIFACT_REPO = 'asia-south2-docker.pkg.dev/mystical-melody-463806-k9/lang-api' // e.g., us-central1-docker.pkg.dev/my-project/my-repo
     IMAGE_NAME = "${SERVICE_NAME}"
     SECRET_SA_KEY = credentials('gcp-secret-access-key')
     DEPLOY_SA_KEY = credentials('gcp-deploy-access-key')
@@ -18,7 +18,7 @@ pipeline {
       defaultValue: 'main',
       description: 'Select the Git branch to use',
       branchFilter: 'origin/(.*)',             // Only matches origin/ branches
-      useRepository: 'https://github.com/chaudhary-prateek/final-semantic-setup.git',
+      useRepository: 'https://github.com/chaudhary-prateek/lang-api.git',
       sortMode: 'DESCENDING',
       selectedValue: 'NONE',
     )
