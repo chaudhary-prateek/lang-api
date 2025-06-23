@@ -67,6 +67,7 @@ pipeline {
 
           // Write the shell script to convert .env to env.yaml
           writeFile file: 'convert_env.sh', text: '''#!/bin/bash
+writeFile file: 'convert_env.sh', text: '''#!/bin/bash
 echo "" > env.yaml
 while IFS= read -r line || [ -n "$line" ]; do
   if [[ -z "$line" || "$line" =~ ^# ]]; then
