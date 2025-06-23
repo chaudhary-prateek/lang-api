@@ -63,9 +63,9 @@ pipeline {
           def branchName = "${params.BRANCH}".toLowerCase()
           sh """
             gcloud secrets versions access latest --secret="common-env" > common.env || touch common.env
-            gcloud secrets versions access latest --secret="specific-env-${branchName}" > specific.env || touch specific.env
-            cat common.env specific.env > .env
-            rm common.env specific.env
+            gcloud secrets versions access latest --secret="${SERVICE_NAME}" > ${SERVICE_NAME} || touch ${SERVICE_NAME}
+            cat common.env ${SERVICE_NAME} > .env
+            rm common.env ${SERVICE_NAME}
           """
         }
       }
