@@ -81,6 +81,21 @@ pipeline {
       }
     }
 
+    stage('Convert .env to env.yaml') {
+      steps {
+        sh '''
+          echo "" > env.yaml
+          while IFS='=' read -r key value; do
+            # Skip empty lines or comments
+            [ -z "$key" ] && continue
+            [[ "$key" =~ ^#.* ]] && continue
+            # Escape YAML special characters in value
+            value="${value//\"/\\\"}"
+            echo "$key: \"$value\"" >> env.yaml
+          done < .env
+        '''
+      }
+    }
 
 
     stage('Build Docker Image') {
