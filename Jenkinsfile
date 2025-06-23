@@ -53,38 +53,42 @@ pipeline {
       steps {
         script {
           def branchName = "${params.BRANCH}".toLowerCase()
-
-          // Fetch and combine secrets
+    
+          // Fetch secrets and create .env
           sh """
             gcloud secrets versions access latest --secret="common" > common.env || touch common.env
             gcloud secrets versions access latest --secret="${SERVICE_NAME}" > ${SERVICE_NAME}.env || touch ${SERVICE_NAME}.env
-
+    
+            echo "=== common.env ==="
+            cat common.env
+    
+            echo "=== ${SERVICE_NAME}.env ==="
+            cat ${SERVICE_NAME}.env
+    
             cat common.env ${SERVICE_NAME}.env > .env
-            rm common.env ${SERVICE_NAME}.env
-
-            echo "=== .env (for Docker build) ==="
+            echo "=== Combined .env ==="
             cat .env
           """
-
-          // Write shell script to convert .env -> env.yaml
-          writeFile file: 'convert_env.sh', text: """#!/bin/bash
-echo "" > env.yaml
-while IFS= read -r line || [ -n "\$line" ]; do
-  [[ -z "\$line" || "\$line" =~ ^# ]] && continue
-
-  key="\${line%%=*}"
-  value="\${line#*=}"
-
-  value="\${value%\\\"}"
-  value="\${value#\\\"}"
-  value="\${value%\\'}"
-  value="\${value#\\'}"
-
-  value="\${value//\\\"/\\\\\\\"}"
-  echo "\$key: \\"\$value\\"" >> env.yaml
-done < .env
-"""
-
+    
+          // Write conversion script from .env to env.yaml
+          writeFile file: 'convert_env.sh', text: '''#!/bin/bash
+    echo "" > env.yaml
+    
+    while IFS= read -r line || [ -n "$line" ]; do
+      [[ -z "$line" || "$line" =~ ^# ]] && continue
+    
+      key="${line%%=*}"
+      value="${line#*=}"
+    
+      value="${value%\"}"
+      value="${value#\"}"
+      value="${value%\'}"
+      value="${value#\'}"
+    
+      printf '%s: "%s"\\n' "$key" "$value" >> env.yaml
+    done < .env
+    '''
+    
           // Execute conversion
           sh 'chmod +x convert_env.sh && ./convert_env.sh'
           sh 'echo "=== env.yaml (for Cloud Run) ===" && cat env.yaml'
