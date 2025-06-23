@@ -53,57 +53,51 @@ pipeline {
       steps {
         script {
           def branchName = "${params.BRANCH}".toLowerCase()
-    
+
           // Fetch secrets and create .env
           sh """
             gcloud secrets versions access latest --secret="common" > common.env || touch common.env
             gcloud secrets versions access latest --secret="${SERVICE_NAME}" > ${SERVICE_NAME}.env || touch ${SERVICE_NAME}.env
-    
+
             echo "=== common.env ==="
             cat common.env
-    
+
             echo "=== ${SERVICE_NAME}.env ==="
             cat ${SERVICE_NAME}.env
-    
+
             cat common.env ${SERVICE_NAME}.env > .env
             echo "=== Combined .env ==="
             cat .env
           """
-    
-          // Write conversion script from .env to env.yaml
+
+          // Write shell script to convert .env to env.yaml
           writeFile file: 'convert_env.sh', text: '''#!/bin/bash
-    echo "" > env.yaml
-    
-    writeFile file: 'convert_env.sh', text: '''#!/bin/bash
-    echo "" > env.yaml
-    
-    writeFile file: 'convert_env.sh', text: '''#!/bin/bash
-    echo "" > env.yaml
-    
-    while IFS= read -r line || [ -n "$line" ]; do
-      # Skip empty lines and comments
-      if [[ -z "$line" || "$line" == \#* ]]; then
-        continue
-      fi
-    
-      key="${line%%=*}"
-      value="${line#*=}"
-    
-      # Trim surrounding quotes
-      value="${value%\"}"
-      value="${value#\"}"
-      value="${value%\'}"
-      value="${value#\'}"
-    
-      # Escape double quotes inside value
-      value="${value//\"/\\\"}"
-    
-      # Append to env.yaml in valid YAML format
-      echo "$key: \"$value\"" >> env.yaml
-    done < .env
-    '''
-    
-          // Execute conversion
+echo "" > env.yaml
+
+while IFS= read -r line || [ -n "$line" ]; do
+  # Skip empty lines and comments
+  if [[ -z "$line" || "$line" == \#* ]]; then
+    continue
+  fi
+
+  key="${line%%=*}"
+  value="${line#*=}"
+
+  # Trim surrounding quotes
+  value="${value%\"}"
+  value="${value#\"}"
+  value="${value%\'}"
+  value="${value#\'}"
+
+  # Escape double quotes inside value
+  value="${value//\"/\\\"}"
+
+  # Write to env.yaml
+  echo "$key: \"$value\"" >> env.yaml
+done < .env
+'''
+
+          // Execute the conversion script
           sh 'chmod +x convert_env.sh && ./convert_env.sh'
           sh 'echo "=== env.yaml (for Cloud Run) ===" && cat env.yaml'
         }
@@ -162,6 +156,7 @@ pipeline {
     }
   }
 }
+
 
 
 
