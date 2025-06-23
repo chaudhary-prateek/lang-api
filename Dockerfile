@@ -1,17 +1,22 @@
+# Use Node base image
 FROM node:18-alpine
 
+# Set working directory
 WORKDIR /usr/src/app
 
-# ✅ Set this BEFORE copying package.json to apply during npm install
+# Set ENV to disable Husky
 ENV HUSKY=0
 
-# Copy only package files first to cache dependencies
+# Copy only package.json files
 COPY package*.json ./
 
-# Install production dependencies
+# ✅ Remove prepare script dynamically before install
+RUN npm pkg delete scripts.prepare
+
+# Now install only production dependencies
 RUN npm install --only=production
 
-# Copy the rest of the application code
+# Copy the rest of the app
 COPY . .
 
 CMD ["node", "index.js"]
