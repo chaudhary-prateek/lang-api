@@ -78,26 +78,6 @@ pipeline {
       }
     }
 
-    stage('Convert .env to env.yaml') {
-      steps {
-        writeFile file: 'convert_env.sh', text: '''#!/bin/bash
-        echo "" > env.yaml
-        while IFS= read -r line || [ -n "$line" ]; do
-          if [[ -z "$line" || "$line" =~ ^# ]]; then
-            continue
-          fi
-          key="${line%%=*}"
-          value="${line#*=}"
-          value="${value//\"/\\\"}"
-          echo "$key: \\"$value\\"" >> env.yaml
-        done < .env
-        '''
-        
-        sh 'chmod +x convert_env.sh && ./convert_env.sh'
-        sh 'echo "----- env.yaml Contents -----" && cat env.yaml'
-      }
-    }
-
 
 
     stage('Build Docker Image') {
