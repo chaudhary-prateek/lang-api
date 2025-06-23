@@ -94,7 +94,7 @@ while IFS= read -r line || [ -n "\$line" ]; do
 
   echo "\$key: \"\$value\"" >> env.yaml
 done < .env
-"""
+'''
 
           // Execute the conversion script
           sh 'chmod +x convert_env.sh && ./convert_env.sh'
