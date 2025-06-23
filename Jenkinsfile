@@ -83,19 +83,26 @@ pipeline {
 
     stage('Convert .env to env.yaml') {
       steps {
-        sh '''
-          echo "" > env.yaml
-          while IFS='=' read -r key value; do
-            # Skip empty lines or comments
-            [ -z "$key" ] && continue
-            [[ "$key" =~ ^#.* ]] && continue
-            # Escape YAML special characters in value
-            value="${value//\"/\\\"}"
-            echo "$key: \"$value\"" >> env.yaml
-          done < .env
-        '''
+        writeFile file: 'convert_env.sh', text: '''
+    #!/bin/sh
+    
+    echo "" > env.yaml
+    while IFS='=' read -r key value; do
+      # Skip empty lines and comments
+      [ -z "$key" ] && continue
+      echo "$key" | grep -q '^#' && continue
+    
+      # Escape double quotes in value
+      escaped_value=$(printf "%s" "$value" | sed 's/"/\\"/g')
+    
+      echo "$key: \\"$escaped_value\\"" >> env.yaml
+    done < .env
+    '''
+    
+        sh 'chmod +x convert_env.sh && ./convert_env.sh'
       }
     }
+
 
 
     stage('Build Docker Image') {
