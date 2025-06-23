@@ -79,12 +79,14 @@ pipeline {
     
     while IFS= read -r line || [ -n "$line" ]; do
       # Skip empty lines and comments
-      [[ -z "$line" || "$line" =~ ^# ]] && continue
+      if [[ -z "$line" || "$line" =~ ^# ]]; then
+        continue
+      fi
     
       key="${line%%=*}"
       value="${line#*=}"
     
-      # Remove wrapping quotes if any
+      # Remove surrounding quotes if any
       value="${value%\"}"
       value="${value#\"}"
       value="${value%\'}"
@@ -93,7 +95,8 @@ pipeline {
       # Escape inner double quotes
       value="${value//\"/\\\"}"
     
-      printf '%s: "%s"\\n' "$key" "$value" >> env.yaml
+      # Write to YAML
+      printf '%s: \"%s\"\\n' "$key" "$value" >> env.yaml
     done < .env
     '''
     
