@@ -7,8 +7,8 @@ pipeline {
     SERVICE_NAME = 'lang-api'
     ARTIFACT_REPO = 'asia-south2-docker.pkg.dev/mystical-melody-463806-k9/lang-api' // e.g., us-central1-docker.pkg.dev/my-project/my-repo
     IMAGE_NAME = "${SERVICE_NAME}"
-    SECRET_SA_KEY = credentials('gcp-secret-access-key')
-    DEPLOY_SA_KEY = credentials('gcp-deploy-access-key')
+    /*SECRET_SA_KEY = credentials('gcp-secret-access-key')
+    DEPLOY_SA_KEY = credentials('gcp-deploy-access-key')*/
   }
 
   parameters {
@@ -48,11 +48,12 @@ pipeline {
 */
     stage('Auth to GCP (Secret Access)') {
       steps {
-        sh '''
-          echo "$SECRET_SA_KEY" > secret-key.json
-          gcloud auth activate-service-account --key-file=secret-key.json
-          gcloud config set project $PROJECT_ID
-        '''
+        withCredentials([file(credentialsId: 'gcp-secret-access-key', variable: 'SECRET_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$SECRET_FILE
+            gcloud config set project $PROJECT_ID
+          '''
+        }
       }
     }
 
@@ -81,11 +82,12 @@ pipeline {
 
     stage('Auth to GCP (Deploy Access)') {
       steps {
-        sh '''
-          echo "$DEPLOY_SA_KEY" > deploy-key.json
-          gcloud auth activate-service-account --key-file=deploy-key.json
-          gcloud config set project $PROJECT_ID
-        '''
+        withCredentials([file(credentialsId: 'gcp-deploy-access-key', variable: 'DEPLOY_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$DEPLOY_FILE
+            gcloud config set project $PROJECT_ID
+          '''
+        }
       }
     }
 
