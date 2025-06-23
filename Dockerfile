@@ -7,7 +7,8 @@ WORKDIR /usr/src/app
 # Copy package.json and package-lock.json before copying the rest of the code
 COPY package*.json ./
 
-# Install dependencies using production flag for a smaller image
+# Disable prepare script before install
+ENV HUSKY=0
 RUN npm install --only=production
 
 # Copy the remaining application source code
