@@ -35,7 +35,7 @@ pipeline {
   stages {
     stage('Checkout Code') {
       steps {
-        git branch: "${params.BRANCH}", url: 'https://github.com/chaudhary-prateek/final-semantic-setup.git'
+        git branch: "${params.BRANCH}", url: 'git@github.com:chaudhary-prateek/lang-api.git'
       }
     }
 
