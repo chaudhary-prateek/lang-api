@@ -1,0 +1,158 @@
+pipeline {
+  agent any
+
+  environment {
+    PROJECT_ID = 'mystical-melody-463806-k9'
+    REGION = 'asia-south2'
+    SERVICE_NAME = 'lang-api'
+    ARTIFACT_REPO = 'asia-south2-docker.pkg.dev/mystical-melody-463806-k9/lang-api'
+    IMAGE_NAME = "${SERVICE_NAME}"
+  }
+
+  parameters {
+    gitParameter(
+      name: 'BRANCH',
+      type: 'PT_BRANCH',
+      defaultValue: 'main',
+      description: 'Select the Git branch to use',
+      branchFilter: 'origin/(.*)',
+      useRepository: 'https://github.com/chaudhary-prateek/lang-api.git',
+      sortMode: 'DESCENDING',
+      selectedValue: 'NONE',
+    )
+
+    gitParameter(
+      name: 'TAG',
+      type: 'PT_TAG',
+      tagFilter: '',
+      defaultValue: 'NONE',
+      selectedValue: 'NONE',
+      description: 'Select a tag'
+    )
+  }
+
+  stages {
+    stage('Checkout Code') {
+      steps {
+        git branch: "${params.BRANCH}", url: 'https://github.com/chaudhary-prateek/lang-api.git'
+      }
+    }
+
+    stage('Auth to GCP (Secret Access)') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-secret-access-key', variable: 'SECRET_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$SECRET_FILE
+            gcloud config set project $PROJECT_ID
+          '''
+        }
+      }
+    }
+
+    stage('Fetch & Convert Secrets') {
+      steps {
+        script {
+          def branchName = "${params.BRANCH}".toLowerCase()
+
+          // Fetch secrets and create .env
+          sh """
+            gcloud secrets versions access latest --secret="common" > common.env || touch common.env
+            gcloud secrets versions access latest --secret="${SERVICE_NAME}" > ${SERVICE_NAME}.env || touch ${SERVICE_NAME}.env
+
+            echo "=== common.env ==="
+            cat common.env
+
+            echo "=== ${SERVICE_NAME}.env ==="
+            cat ${SERVICE_NAME}.env
+
+            cat common.env ${SERVICE_NAME}.env > .env
+            echo "=== Combined .env ==="
+            cat .env
+          """
+
+          // Write shell script to convert .env to env.yaml
+          writeFile file: 'convert_env.sh', text: """#!/bin/bash
+echo "" > env.yaml
+
+while IFS= read -r line || [ -n "\$line" ]; do
+  # Skip empty lines and comments
+  if [[ -z "\$line" || "\${line:0:1}" == "#" ]]; then
+    continue
+  fi
+
+  key="\${line%%=*}"
+  value="\${line#*=}"
+
+  # Remove wrapping quotes (both single and double)
+  if [[ "\$value" == \\\"*\\\" ]]; then
+    value="\${value:1:\${#value}-2}"
+  elif [[ "\$value" == \'*\' ]]; then
+    value="\${value:1:\${#value}-2}"
+  fi
+
+  # Escape inner quotes for YAML
+  value="\${value//\\\"/\\\\\\\"}"
+
+  echo "\$key: \"\$value\"" >> env.yaml
+done < .env
+"""
+
+          // Execute the conversion script
+          sh 'chmod +x convert_env.sh && ./convert_env.sh'
+          sh 'echo "=== env.yaml (for Cloud Run) ===" && cat env.yaml'
+        }
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        script {
+          def tag = "${params.TAG}"
+          sh "docker build -t ${IMAGE_NAME}:${tag} ."
+        }
+      }
+    }
+
+    stage('Auth to GCP (Deploy Access)') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-deploy-access-key', variable: 'DEPLOY_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$DEPLOY_FILE
+            gcloud config set project $PROJECT_ID
+            gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+          '''
+        }
+      }
+    }
+
+    stage('Tag & Push to Artifact Registry') {
+      steps {
+        script {
+          def tag = "${params.TAG}"
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${tag}"
+          sh """
+            docker tag ${IMAGE_NAME}:${tag} ${fullImage}
+            docker push ${fullImage}
+          """
+        }
+      }
+    }
+
+    stage('Deploy to Cloud Run') {
+      steps {
+        script {
+          def tag = "${params.TAG}"
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${tag}"
+          sh """
+            gcloud run deploy ${SERVICE_NAME} \
+              --image=${fullImage} \
+              --region=${REGION} \
+              --platform=managed \
+              --allow-unauthenticated \
+              --env-vars-file=env.yaml
+          """
+        }
+      }
+    }
+  }
+}
