@@ -83,20 +83,16 @@ pipeline {
         writeFile file: 'convert_env.sh', text: '''#!/bin/bash
         echo "" > env.yaml
         while IFS= read -r line || [ -n "$line" ]; do
-          # Skip empty lines and comments
-          [[ "$line" =~ ^#.*$ || -z "$line" ]] && continue
-        
-          # Parse key and value
+          if [[ -z "$line" || "$line" =~ ^# ]]; then
+            continue
+          fi
           key="${line%%=*}"
           value="${line#*=}"
-        
-          # Escape YAML-sensitive characters (quotes, colons)
-          key="${key//\"/\\\"}"
           value="${value//\"/\\\"}"
-        
-          echo "$key: \"$value\"" >> env.yaml
+          echo "$key: \\"$value\\"" >> env.yaml
         done < .env
         '''
+        
         sh 'chmod +x convert_env.sh && ./convert_env.sh'
         sh 'echo "----- env.yaml Contents -----" && cat env.yaml'
       }
