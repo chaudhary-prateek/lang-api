@@ -39,13 +39,13 @@ pipeline {
         git branch: "${params.BRANCH}", url: 'https://github.com/chaudhary-prateek/lang-api.git'
       }
     }
-
+/*
     stage('Build Java Project') {
       steps {
         sh 'mvn clean package -Dmaven.test.skip=true'
       }
     }
-
+*/
     stage('Auth to GCP (Secret Access)') {
       steps {
         sh '''
