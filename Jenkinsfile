@@ -1,4 +1,155 @@
 pipeline {
+  agent any
+
+  environment {
+    PROJECT_ID = 'your-gcp-project-id'
+    REGION = 'your-region' // e.g., us-central1
+    SERVICE_NAME = 'your-cloud-run-service'
+    ARTIFACT_REPO = 'your-repo' // e.g., us-central1-docker.pkg.dev/my-project/my-repo
+    IMAGE_NAME = "${SERVICE_NAME}"
+    SECRET_SA_KEY = credentials('gcp-secret-access-key')
+    DEPLOY_SA_KEY = credentials('gcp-deploy-access-key')
+  }
+
+  parameters {
+    gitParameter(
+      name: 'BRANCH',
+      type: 'PT_BRANCH',
+      defaultValue: 'main',
+      description: 'Select the Git branch to use',
+      branchFilter: 'origin/(.*)',             // Only matches origin/ branches
+      useRepository: 'https://github.com/chaudhary-prateek/final-semantic-setup.git',
+      sortMode: 'DESCENDING',
+      selectedValue: 'NONE',
+    )
+
+    gitParameter(
+                name: 'Tag',
+                type: 'PT_TAG',
+                tagFilter: '',
+                defaultValue: '',
+                description: 'Select a tag'
+    )
+  }
+
+  stages {
+    stage('Checkout Code') {
+      steps {
+        git branch: "${params.BRANCH}", url: 'https://github.com/chaudhary-prateek/final-semantic-setup.git'
+      }
+    }
+
+    stage('Build Java Project') {
+      steps {
+        sh 'mvn clean package -Dmaven.test.skip=true'
+      }
+    }
+
+    stage('Auth to GCP (Secret Access)') {
+      steps {
+        sh '''
+          echo "$SECRET_SA_KEY" > secret-key.json
+          gcloud auth activate-service-account --key-file=secret-key.json
+          gcloud config set project $PROJECT_ID
+        '''
+      }
+    }
+
+    stage('Fetch & Combine Secrets') {
+      steps {
+        script {
+          def branchName = "${params.BRANCH}".toLowerCase()
+          sh """
+            gcloud secrets versions access latest --secret="common-env" > common.env || touch common.env
+            gcloud secrets versions access latest --secret="specific-env-${branchName}" > specific.env || touch specific.env
+            cat common.env specific.env > .env
+            rm common.env specific.env
+          """
+        }
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        script {
+          def tag = "${params.TAG}"
+          sh "docker build -t ${IMAGE_NAME}:${tag} ."
+        }
+      }
+    }
+
+    stage('Auth to GCP (Deploy Access)') {
+      steps {
+        sh '''
+          echo "$DEPLOY_SA_KEY" > deploy-key.json
+          gcloud auth activate-service-account --key-file=deploy-key.json
+          gcloud config set project $PROJECT_ID
+        '''
+      }
+    }
+
+    stage('Tag & Push to Artifact Registry') {
+      steps {
+        script {
+          def tag = "${params.TAG}"
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${tag}"
+          sh """
+            docker tag ${IMAGE_NAME}:${tag} ${fullImage}
+            docker push ${fullImage}
+          """
+        }
+      }
+    }
+
+    stage('Deploy to Cloud Run') {
+      steps {
+        script {
+          def tag = "${params.TAG}"
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${tag}"
+          sh """
+            gcloud run deploy ${SERVICE_NAME} \
+              --image=${fullImage} \
+              --region=${REGION} \
+              --platform=managed \
+              --allow-unauthenticated \
+              --set-env-vars-file=.env
+          """
+        }
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*pipeline {
     agent any
     parameters {
         choice(
@@ -100,7 +251,7 @@ pipeline {
         }
 */
 
-
+/*
         stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/chaudhary-prateek/lang-api.git'
@@ -211,9 +362,7 @@ pipeline {
         }
     }
 }
-
-
-
+*/
 
 
 
@@ -376,3 +525,20 @@ pipeline {
         }
     }
 }*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
