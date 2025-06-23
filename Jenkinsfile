@@ -71,7 +71,7 @@ pipeline {
           """
 
           // Write shell script to convert .env to env.yaml
-          writeFile file: 'convert_env.sh', text: '''#!/bin/bash
+          writeFile file: 'convert_env.sh', text: """#!/bin/bash
 echo "" > env.yaml
 
 while IFS= read -r line || [ -n "\$line" ]; do
@@ -83,18 +83,19 @@ while IFS= read -r line || [ -n "\$line" ]; do
   key="\${line%%=*}"
   value="\${line#*=}"
 
-  # Trim quotes
-  value="\${value%\\\"}"
-  value="\${value#\\\"}"
-  value="\${value%\\'}"
-  value="\${value#\\'}"
+  # Remove wrapping quotes (both single and double)
+  if [[ "\$value" == \\\"*\\\" ]]; then
+    value="\${value:1:\${#value}-2}"
+  elif [[ "\$value" == \'*\' ]]; then
+    value="\${value:1:\${#value}-2}"
+  fi
 
-  # Escape double quotes
+  # Escape inner quotes for YAML
   value="\${value//\\\"/\\\\\\\"}"
 
   echo "\$key: \"\$value\"" >> env.yaml
 done < .env
-'''
+"""
 
           // Execute the conversion script
           sh 'chmod +x convert_env.sh && ./convert_env.sh'
