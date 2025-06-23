@@ -77,26 +77,29 @@ pipeline {
     writeFile file: 'convert_env.sh', text: '''#!/bin/bash
     echo "" > env.yaml
     
+    writeFile file: 'convert_env.sh', text: '''#!/bin/bash
+    echo "" > env.yaml
+    
     while IFS= read -r line || [ -n "$line" ]; do
       # Skip empty lines and comments
-      if [[ -z "$line" || "$line" =~ ^# ]]; then
+      if [[ -z "$line" || "$line" == \#* ]]; then
         continue
       fi
     
       key="${line%%=*}"
       value="${line#*=}"
     
-      # Remove surrounding quotes if any
+      # Trim surrounding quotes
       value="${value%\"}"
       value="${value#\"}"
       value="${value%\'}"
       value="${value#\'}"
     
-      # Escape inner double quotes
+      # Escape double quotes inside value
       value="${value//\"/\\\"}"
     
-      # Write to YAML
-      printf '%s: \"%s\"\\n' "$key" "$value" >> env.yaml
+      # Append to env.yaml in valid YAML format
+      echo "$key: \"$value\"" >> env.yaml
     done < .env
     '''
     
