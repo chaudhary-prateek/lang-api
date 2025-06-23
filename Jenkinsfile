@@ -54,6 +54,7 @@ pipeline {
         script {
           def branchName = "${params.BRANCH}".toLowerCase()
 
+          // Fetch and combine secrets
           sh """
             gcloud secrets versions access latest --secret="common" > common.env || touch common.env
             gcloud secrets versions access latest --secret="${SERVICE_NAME}" > ${SERVICE_NAME}.env || touch ${SERVICE_NAME}.env
@@ -65,9 +66,8 @@ pipeline {
             cat .env
           """
 
-          // Write the shell script to convert .env to env.yaml
-          writeFile file: 'convert_env.sh', text: '''#!/bin/bash
-writeFile file: 'convert_env.sh', text: """#!/bin/bash
+          // Write shell script to convert .env -> env.yaml
+          writeFile file: 'convert_env.sh', text: """#!/bin/bash
 echo "" > env.yaml
 while IFS= read -r line || [ -n "\$line" ]; do
   if [[ -z "\$line" || "\$line" =~ ^# ]]; then
@@ -80,6 +80,7 @@ while IFS= read -r line || [ -n "\$line" ]; do
 done < .env
 """
 
+          // Execute conversion
           sh 'chmod +x convert_env.sh && ./convert_env.sh'
           sh 'echo "=== env.yaml (for Cloud Run) ===" && cat env.yaml'
         }
@@ -138,6 +139,7 @@ done < .env
     }
   }
 }
+
 
 
 
