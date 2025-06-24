@@ -163,7 +163,7 @@ pipeline {
               --platform=managed \
               --allow-unauthenticated \
               --env-vars-file=env.yaml \
-              --port=5000
+              --port=8080
           """
           echo "✅ Deployed ${SERVICE_NAME} with image: ${fullImage}"
         }
