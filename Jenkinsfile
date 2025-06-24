@@ -5,8 +5,9 @@ pipeline {
     PROJECT_ID = 'mystical-melody-463806-k9'
     REGION = 'asia-south2'
     SERVICE_NAME = 'lang-api'
-    ARTIFACT_REPO = 'asia-south2-docker.pkg.dev/mystical-melody-463806-k9/lang-api'
+    ARTIFACT_REPO = "asia-south2-docker.pkg.dev/${PROJECT_ID}/lang-api"
     IMAGE_NAME = "${SERVICE_NAME}"
+    REPO_URL = 'https://github.com/chaudhary-prateek/final-semantic-setup.git'
   }
 
   parameters {
@@ -15,18 +16,17 @@ pipeline {
       type: 'PT_BRANCH',
       defaultValue: 'main',
       description: 'Select the Git branch to use',
-      branchFilter: 'origin/(.*)',             // Only matches origin/ branches
+      branchFilter: 'origin/(.*)',
       useRepository: 'https://github.com/chaudhary-prateek/final-semantic-setup.git',
       sortMode: 'DESCENDING',
-      selectedValue: 'NONE',
+      selectedValue: 'NONE'
     )
 
     gitParameter(
-                name: 'TAG',
-                type: 'PT_TAG',
-                tagFilter: '',
-                defaultValue: '',
-                description: 'Select a dev tag'
+      name: 'TAG',
+      type: 'PT_TAG',
+      defaultValue: '',
+      description: 'Select a Git tag to use (leave branch empty)'
     )
   }
 
@@ -37,28 +37,26 @@ pipeline {
           echo "🌿 Branch: ${params.BRANCH}"
           echo "🏷️ Tag: ${params.TAG}"
 
-          def repoUrl = 'https://github.com/chaudhary-prateek/final-semantic-setup.git'
-
           if (params.TAG?.trim()) {
-            echo "📥 Checking out tag: ${params.TAG}"
+            echo "📥 Checking out TAG: ${params.TAG}"
             checkout([$class: 'GitSCM',
               branches: [[name: "refs/tags/${params.TAG}"]],
               userRemoteConfigs: [[
-                url: repoUrl,
+                url: env.REPO_URL,
                 credentialsId: 'github-token'
-                ]]
+              ]]
             ])
           } else if (params.BRANCH?.trim()) {
-            echo "📥 Checking out branch: ${params.BRANCH}"
+            echo "📥 Checking out BRANCH: ${params.BRANCH}"
             checkout([$class: 'GitSCM',
-              branches: [[name: "*/${params.BRANCH}"]], // this auto maps to "origin/main" correctly
+              branches: [[name: "*/${params.BRANCH}"]],
               userRemoteConfigs: [[
-                url: repoUrl,
+                url: env.REPO_URL,
                 credentialsId: 'github-token'
-                ]]
+              ]]
             ])
           } else {
-            error("❌ No valid branch or tag selected.")
+            error("❌ You must select either a branch or tag.")
           }
         }
       }
@@ -78,52 +76,38 @@ pipeline {
     stage('Fetch & Convert Secrets') {
       steps {
         script {
-          def branchName = "${params.BRANCH}".toLowerCase()
+          def tag = params.TAG?.trim()
+          def branch = params.BRANCH?.trim()
+          def envSuffix = (tag && tag.contains('dev')) || branch == 'develop' ? 'dev' : 'prod'
+          def serviceSecret = "${SERVICE_NAME}-${envSuffix}"
 
-          // Fetch secrets and create .env
           sh """
             gcloud secrets versions access latest --secret="common" > common.env || touch common.env
-            gcloud secrets versions access latest --secret="${SERVICE_NAME}" > ${SERVICE_NAME}.env || touch ${SERVICE_NAME}.env
+            gcloud secrets versions access latest --secret="${serviceSecret}" > ${serviceSecret}.env || touch ${serviceSecret}.env
 
             echo "=== common.env ==="
             cat common.env
 
-            echo "=== ${SERVICE_NAME}.env ==="
-            cat ${SERVICE_NAME}.env
+            echo "=== ${serviceSecret}.env ==="
+            cat ${serviceSecret}.env
 
-            cat common.env ${SERVICE_NAME}.env > .env
+            cat common.env ${serviceSecret}.env > .env
             echo "=== Combined .env ==="
             cat .env
           """
 
-          // Write shell script to convert .env to env.yaml
           writeFile file: 'convert_env.sh', text: """#!/bin/bash
 echo "" > env.yaml
-
 while IFS= read -r line || [ -n "\$line" ]; do
-  # Skip empty lines and comments
-  if [[ -z "\$line" || "\${line:0:1}" == "#" ]]; then
-    continue
-  fi
-
+  [[ -z "\$line" || "\${line:0:1}" == "#" ]] && continue
   key="\${line%%=*}"
   value="\${line#*=}"
-
-  # Remove wrapping quotes (both single and double)
-  if [[ "\$value" == \\\"*\\\" ]]; then
-    value="\${value:1:\${#value}-2}"
-  elif [[ "\$value" == \'*\' ]]; then
-    value="\${value:1:\${#value}-2}"
-  fi
-
-  # Escape inner quotes for YAML
+  [[ "\$value" == \\\"*\\\" ]] && value="\${value:1:\${#value}-2}"
+  [[ "\$value" == \'*\' ]] && value="\${value:1:\${#value}-2}"
   value="\${value//\\\"/\\\\\\\"}"
-
   echo "\$key: \"\$value\"" >> env.yaml
 done < .env
 """
-
-          // Execute the conversion script
           sh 'chmod +x convert_env.sh && ./convert_env.sh'
           sh 'echo "=== env.yaml (for Cloud Run) ===" && cat env.yaml'
         }
@@ -133,8 +117,8 @@ done < .env
     stage('Build Docker Image') {
       steps {
         script {
-          def tag = "${params.TAG}"
-          sh "docker build -t ${IMAGE_NAME}:${tag} ."
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          sh "docker build -t ${IMAGE_NAME}:${imageTag} ."
         }
       }
     }
@@ -154,10 +138,10 @@ done < .env
     stage('Tag & Push to Artifact Registry') {
       steps {
         script {
-          def tag = "${params.TAG}"
-          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${tag}"
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${imageTag}"
           sh """
-            docker tag ${IMAGE_NAME}:${tag} ${fullImage}
+            docker tag ${IMAGE_NAME}:${imageTag} ${fullImage}
             docker push ${fullImage}
           """
         }
@@ -167,8 +151,8 @@ done < .env
     stage('Deploy to Cloud Run') {
       steps {
         script {
-          def tag = "${params.TAG}"
-          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${tag}"
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${imageTag}"
           sh """
             gcloud run deploy ${SERVICE_NAME} \
               --image=${fullImage} \
@@ -177,13 +161,12 @@ done < .env
               --allow-unauthenticated \
               --env-vars-file=env.yaml
           """
+          echo "✅ Deployed ${SERVICE_NAME} with image: ${fullImage}"
         }
       }
     }
   }
 }
-
-
 
 
 
