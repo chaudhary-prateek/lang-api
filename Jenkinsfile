@@ -38,7 +38,11 @@ pipeline {
         script {
           echo "🌿 Branch: ${params.BRANCH}"
           echo "🏷️ Tag: ${params.TAG}"
-
+    
+          if (!params.BRANCH?.trim() && !params.TAG?.trim()) {
+            error "❌ You must select either a Branch or a Tag before triggering the build."
+          }
+    
           if (params.TAG?.trim()) {
             echo "📥 Checking out TAG: ${params.TAG}"
             checkout([$class: 'GitSCM',
@@ -48,7 +52,7 @@ pipeline {
                 credentialsId: 'github-token'
               ]]
             ])
-          } else if (params.BRANCH?.trim()) {
+          } else {
             echo "📥 Checking out BRANCH: ${params.BRANCH}"
             checkout([$class: 'GitSCM',
               branches: [[name: "*/${params.BRANCH}"]],
@@ -57,12 +61,11 @@ pipeline {
                 credentialsId: 'github-token'
               ]]
             ])
-          } else {
-            error("❌ You must select either a branch or tag.")
           }
         }
       }
     }
+
 
     stage('Auth to GCP (Secret Access)') {
       steps {
