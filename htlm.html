@@ -44,7 +44,695 @@ pipeline {
     )
   }
 
+  stages {pipeline {
+  agent any
+
+  environment {
+    PROJECT_ID = 'mystical-melody-463806-k9'
+    REGION = 'asia-south2'
+    SERVICE_NAME = 'lang-api'
+    ARTIFACT_REPO = "asia-south2-docker.pkg.dev/${PROJECT_ID}/lang-api"
+    IMAGE_NAME = "${SERVICE_NAME}"
+    REPO_URL = 'https://github.com/chaudhary-prateek/lang-api.git'
+  }
+
+  parameters {
+    gitParameter(
+      name: 'BRANCH',
+      type: 'PT_BRANCH',
+      defaultValue: '',
+      description: 'Select the Git branch to use',
+      branchFilter: 'origin/(.*)',
+      useRepository: 'https://github.com/chaudhary-prateek/lang-api.git',
+      sortMode: 'DESCENDING',
+      selectedValue: 'NONE'
+    )
+
+    gitParameter(
+      name: 'TAG',
+      type: 'PT_TAG',
+      description: 'Select a Git tag to use (leave branch empty)',
+      defaultValue: '',
+      sortMode: 'DESCENDING',
+      selectedValue: 'NONE'
+      
+    )
+  }
+
   stages {
+    stage('Checkout Code') {
+      steps {
+        script {
+          echo "🌿 Branch: ${params.BRANCH}"
+          echo "🏷️ Tag: ${params.TAG}"
+
+          def repoUrl = 'https://github.com/chaudhary-prateek/lang-api.git'
+
+          if (params.TAG?.trim()) {
+            echo "📥 Checking out tag: ${params.TAG}"
+            checkout([$class: 'GitSCM',
+              branches: [[name: "refs/tags/${params.TAG}"]],
+              userRemoteConfigs: [[
+                url: repoUrl,
+                credentialsId: 'github-token'
+                ]]
+            ])
+          } else if (params.BRANCH?.trim()) {
+            echo "📥 Checking out branch: ${params.BRANCH}"
+            checkout([$class: 'GitSCM',
+              branches: [[name: "*/${params.BRANCH}"]], // this auto maps to "origin/main" correctly
+              userRemoteConfigs: [[
+                url: repoUrl,
+                credentialsId: 'github-token'
+                ]]
+            ])
+          } else {
+            error("❌ No valid branch or tag selected.")
+          }
+        }
+      }
+    }
+
+
+    stage('Auth to GCP (Secret Access)') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-secret-access-key', variable: 'SECRET_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$SECRET_FILE
+            gcloud config set project $PROJECT_ID
+          '''
+        }
+      }
+    }
+
+    stage('Fetch & Convert Secrets') {
+      steps {
+        script {
+          def serviceSecret = "${SERVICE_NAME}"
+    
+          sh """
+            gcloud secrets versions access latest --secret="common" > common.env || touch common.env
+            gcloud secrets versions access latest --secret="${serviceSecret}" > ${serviceSecret}.env || touch ${serviceSecret}.env
+    
+            echo "=== common.env ==="
+            cat common.env
+    
+            echo "=== ${serviceSecret}.env ==="
+            cat ${serviceSecret}.env
+    
+            cat common.env ${serviceSecret}.env > .env
+            echo "=== Combined .env ==="
+            cat .env
+          """
+    
+          writeFile file: 'convert_env.sh', text: """#!/bin/bash
+    echo "" > env.yaml
+    while IFS= read -r line || [ -n "\$line" ]; do
+      [[ -z "\$line" || "\${line:0:1}" == "#" ]] && continue
+      key="\${line%%=*}"
+      value="\${line#*=}"
+      [[ "\$value" == \\\"*\\\" ]] && value="\${value:1:\${#value}-2}"
+      [[ "\$value" == \'*\' ]] && value="\${value:1:\${#value}-2}"
+      value="\${value//\\\"/\\\\\\\"}"
+      echo "\$key: \"\$value\"" >> env.yaml
+    done < .env
+    """
+          sh 'chmod +x convert_env.sh && ./convert_env.sh'
+          sh 'echo "=== env.yaml (for Cloud Run) ===" && cat env.yaml'
+        }
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          sh "docker build -t ${IMAGE_NAME}:${imageTag} ."
+        }
+      }
+    }
+
+    stage('Auth to GCP (Deploy Access)') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-deploy-access-key', variable: 'DEPLOY_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$DEPLOY_FILE
+            gcloud config set project $PROJECT_ID
+            gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+          '''
+        }
+      }
+    }
+
+    stage('Tag & Push to Artifact Registry') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${imageTag}"
+          sh """
+            docker tag ${IMAGE_NAME}:${imageTag} ${fullImage}
+            docker push ${fullImage}
+          """
+        }
+      }
+    }
+
+    stage('Deploy to Cloud Run') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${imageTag}"
+          sh """
+            gcloud run deploy ${SERVICE_NAME} \
+              --image=${fullImage} \
+              --region=${REGION} \
+              --platform=managed \
+              --allow-unauthenticated \
+              --env-vars-file=env.yaml
+          """
+          echo "✅ Deployed ${SERVICE_NAME} with image: ${fullImage}"
+        }
+      }
+    }
+  }
+}
+pipeline {
+  agent any
+
+  environment {
+    PROJECT_ID = 'mystical-melody-463806-k9'
+    REGION = 'asia-south2'
+    SERVICE_NAME = 'lang-api'
+    ARTIFACT_REPO = "asia-south2-docker.pkg.dev/${PROJECT_ID}/lang-api"
+    IMAGE_NAME = "${SERVICE_NAME}"
+    REPO_URL = 'https://github.com/chaudhary-prateek/lang-api.git'
+  }
+
+  parameters {
+    gitParameter(
+      name: 'BRANCH',
+      type: 'PT_BRANCH',
+      defaultValue: '',
+      description: 'Select the Git branch to use',
+      branchFilter: 'origin/(.*)',
+      useRepository: 'https://github.com/chaudhary-prateek/lang-api.git',
+      sortMode: 'DESCENDING',
+      selectedValue: 'NONE'
+    )
+
+    gitParameter(
+      name: 'TAG',
+      type: 'PT_TAG',
+      description: 'Select a Git tag to use (leave branch empty)',
+      defaultValue: '',
+      sortMode: 'DESCENDING',
+      selectedValue: 'NONE'
+      
+    )
+  }
+
+  stages {
+    stage('Checkout Code') {
+      steps {
+        script {
+          echo "🌿 Branch: ${params.BRANCH}"
+          echo "🏷️ Tag: ${params.TAG}"
+
+          def repoUrl = 'https://github.com/chaudhary-prateek/lang-api.git'
+
+          if (params.TAG?.trim()) {
+            echo "📥 Checking out tag: ${params.TAG}"
+            checkout([$class: 'GitSCM',
+              branches: [[name: "refs/tags/${params.TAG}"]],
+              userRemoteConfigs: [[
+                url: repoUrl,
+                credentialsId: 'github-token'
+                ]]
+            ])
+          } else if (params.BRANCH?.trim()) {
+            echo "📥 Checking out branch: ${params.BRANCH}"
+            checkout([$class: 'GitSCM',
+              branches: [[name: "*/${params.BRANCH}"]], // this auto maps to "origin/main" correctly
+              userRemoteConfigs: [[
+                url: repoUrl,
+                credentialsId: 'github-token'
+                ]]
+            ])
+          } else {
+            error("❌ No valid branch or tag selected.")
+          }
+        }
+      }
+    }
+
+
+    stage('Auth to GCP (Secret Access)') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-secret-access-key', variable: 'SECRET_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$SECRET_FILE
+            gcloud config set project $PROJECT_ID
+          '''
+        }
+      }
+    }
+
+    stage('Fetch & Convert Secrets') {
+      steps {
+        script {
+          def serviceSecret = "${SERVICE_NAME}"
+    
+          sh """
+            gcloud secrets versions access latest --secret="common" > common.env || touch common.env
+            gcloud secrets versions access latest --secret="${serviceSecret}" > ${serviceSecret}.env || touch ${serviceSecret}.env
+    
+            echo "=== common.env ==="
+            cat common.env
+    
+            echo "=== ${serviceSecret}.env ==="
+            cat ${serviceSecret}.env
+    
+            cat common.env ${serviceSecret}.env > .env
+            echo "=== Combined .env ==="
+            cat .env
+          """
+    
+          writeFile file: 'convert_env.sh', text: """#!/bin/bash
+    echo "" > env.yaml
+    while IFS= read -r line || [ -n "\$line" ]; do
+      [[ -z "\$line" || "\${line:0:1}" == "#" ]] && continue
+      key="\${line%%=*}"
+      value="\${line#*=}"
+      [[ "\$value" == \\\"*\\\" ]] && value="\${value:1:\${#value}-2}"
+      [[ "\$value" == \'*\' ]] && value="\${value:1:\${#value}-2}"
+      value="\${value//\\\"/\\\\\\\"}"
+      echo "\$key: \"\$value\"" >> env.yaml
+    done < .env
+    """
+          sh 'chmod +x convert_env.sh && ./convert_env.sh'
+          sh 'echo "=== env.yaml (for Cloud Run) ===" && cat env.yaml'
+        }
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          sh "docker build -t ${IMAGE_NAME}:${imageTag} ."
+        }
+      }
+    }
+
+    stage('Auth to GCP (Deploy Access)') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-deploy-access-key', variable: 'DEPLOY_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$DEPLOY_FILE
+            gcloud config set project $PROJECT_ID
+            gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+          '''
+        }
+      }
+    }
+
+    stage('Tag & Push to Artifact Registry') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${imageTag}"
+          sh """
+            docker tag ${IMAGE_NAME}:${imageTag} ${fullImage}
+            docker push ${fullImage}
+          """
+        }
+      }
+    }
+
+    stage('Deploy to Cloud Run') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${imageTag}"
+          sh """
+            gcloud run deploy ${SERVICE_NAME} \
+              --image=${fullImage} \
+              --region=${REGION} \
+              --platform=managed \
+              --allow-unauthenticated \
+              --env-vars-file=env.yaml
+          """
+          echo "✅ Deployed ${SERVICE_NAME} with image: ${fullImage}"
+        }
+      }
+    }
+  }
+}
+pipeline {
+  agent any
+
+  environment {
+    PROJECT_ID = 'mystical-melody-463806-k9'
+    REGION = 'asia-south2'
+    SERVICE_NAME = 'lang-api'
+    ARTIFACT_REPO = "asia-south2-docker.pkg.dev/${PROJECT_ID}/lang-api"
+    IMAGE_NAME = "${SERVICE_NAME}"
+    REPO_URL = 'https://github.com/chaudhary-prateek/lang-api.git'
+  }
+
+  parameters {
+    gitParameter(
+      name: 'BRANCH',
+      type: 'PT_BRANCH',
+      defaultValue: '',
+      description: 'Select the Git branch to use',
+      branchFilter: 'origin/(.*)',
+      useRepository: 'https://github.com/chaudhary-prateek/lang-api.git',
+      sortMode: 'DESCENDING',
+      selectedValue: 'NONE'
+    )
+
+    gitParameter(
+      name: 'TAG',
+      type: 'PT_TAG',
+      description: 'Select a Git tag to use (leave branch empty)',
+      defaultValue: '',
+      sortMode: 'DESCENDING',
+      selectedValue: 'NONE'
+      
+    )
+  }
+
+  stages {
+    stage('Checkout Code') {
+      steps {
+        script {
+          echo "🌿 Branch: ${params.BRANCH}"
+          echo "🏷️ Tag: ${params.TAG}"
+
+          def repoUrl = 'https://github.com/chaudhary-prateek/lang-api.git'
+
+          if (params.TAG?.trim()) {
+            echo "📥 Checking out tag: ${params.TAG}"
+            checkout([$class: 'GitSCM',
+              branches: [[name: "refs/tags/${params.TAG}"]],
+              userRemoteConfigs: [[
+                url: repoUrl,
+                credentialsId: 'github-token'
+                ]]
+            ])
+          } else if (params.BRANCH?.trim()) {
+            echo "📥 Checking out branch: ${params.BRANCH}"
+            checkout([$class: 'GitSCM',
+              branches: [[name: "*/${params.BRANCH}"]], // this auto maps to "origin/main" correctly
+              userRemoteConfigs: [[
+                url: repoUrl,
+                credentialsId: 'github-token'
+                ]]
+            ])
+          } else {
+            error("❌ No valid branch or tag selected.")
+          }
+        }
+      }
+    }
+
+
+    stage('Auth to GCP (Secret Access)') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-secret-access-key', variable: 'SECRET_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$SECRET_FILE
+            gcloud config set project $PROJECT_ID
+          '''
+        }
+      }
+    }
+
+    stage('Fetch & Convert Secrets') {
+      steps {
+        script {
+          def serviceSecret = "${SERVICE_NAME}"
+    
+          sh """
+            gcloud secrets versions access latest --secret="common" > common.env || touch common.env
+            gcloud secrets versions access latest --secret="${serviceSecret}" > ${serviceSecret}.env || touch ${serviceSecret}.env
+    
+            echo "=== common.env ==="
+            cat common.env
+    
+            echo "=== ${serviceSecret}.env ==="
+            cat ${serviceSecret}.env
+    
+            cat common.env ${serviceSecret}.env > .env
+            echo "=== Combined .env ==="
+            cat .env
+          """
+    
+          writeFile file: 'convert_env.sh', text: """#!/bin/bash
+    echo "" > env.yaml
+    while IFS= read -r line || [ -n "\$line" ]; do
+      [[ -z "\$line" || "\${line:0:1}" == "#" ]] && continue
+      key="\${line%%=*}"
+      value="\${line#*=}"
+      [[ "\$value" == \\\"*\\\" ]] && value="\${value:1:\${#value}-2}"
+      [[ "\$value" == \'*\' ]] && value="\${value:1:\${#value}-2}"
+      value="\${value//\\\"/\\\\\\\"}"
+      echo "\$key: \"\$value\"" >> env.yaml
+    done < .env
+    """
+          sh 'chmod +x convert_env.sh && ./convert_env.sh'
+          sh 'echo "=== env.yaml (for Cloud Run) ===" && cat env.yaml'
+        }
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          sh "docker build -t ${IMAGE_NAME}:${imageTag} ."
+        }
+      }
+    }
+
+    stage('Auth to GCP (Deploy Access)') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-deploy-access-key', variable: 'DEPLOY_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$DEPLOY_FILE
+            gcloud config set project $PROJECT_ID
+            gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+          '''
+        }
+      }
+    }
+
+    stage('Tag & Push to Artifact Registry') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${imageTag}"
+          sh """
+            docker tag ${IMAGE_NAME}:${imageTag} ${fullImage}
+            docker push ${fullImage}
+          """
+        }
+      }
+    }
+
+    stage('Deploy to Cloud Run') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${imageTag}"
+          sh """
+            gcloud run deploy ${SERVICE_NAME} \
+              --image=${fullImage} \
+              --region=${REGION} \
+              --platform=managed \
+              --allow-unauthenticated \
+              --env-vars-file=env.yaml
+          """
+          echo "✅ Deployed ${SERVICE_NAME} with image: ${fullImage}"
+        }
+      }
+    }
+  }
+}
+pipeline {
+  agent any
+
+  environment {
+    PROJECT_ID = 'mystical-melody-463806-k9'
+    REGION = 'asia-south2'
+    SERVICE_NAME = 'lang-api'
+    ARTIFACT_REPO = "asia-south2-docker.pkg.dev/${PROJECT_ID}/lang-api"
+    IMAGE_NAME = "${SERVICE_NAME}"
+    REPO_URL = 'https://github.com/chaudhary-prateek/lang-api.git'
+  }
+
+  parameters {
+    gitParameter(
+      name: 'BRANCH',
+      type: 'PT_BRANCH',
+      defaultValue: '',
+      description: 'Select the Git branch to use',
+      branchFilter: 'origin/(.*)',
+      useRepository: 'https://github.com/chaudhary-prateek/lang-api.git',
+      sortMode: 'DESCENDING',
+      selectedValue: 'NONE'
+    )
+
+    gitParameter(
+      name: 'TAG',
+      type: 'PT_TAG',
+      description: 'Select a Git tag to use (leave branch empty)',
+      defaultValue: '',
+      sortMode: 'DESCENDING',
+      selectedValue: 'NONE'
+      
+    )
+  }
+
+  stages {
+    stage('Checkout Code') {
+      steps {
+        script {
+          echo "🌿 Branch: ${params.BRANCH}"
+          echo "🏷️ Tag: ${params.TAG}"
+
+          def repoUrl = 'https://github.com/chaudhary-prateek/lang-api.git'
+
+          if (params.TAG?.trim()) {
+            echo "📥 Checking out tag: ${params.TAG}"
+            checkout([$class: 'GitSCM',
+              branches: [[name: "refs/tags/${params.TAG}"]],
+              userRemoteConfigs: [[
+                url: repoUrl,
+                credentialsId: 'github-token'
+                ]]
+            ])
+          } else if (params.BRANCH?.trim()) {
+            echo "📥 Checking out branch: ${params.BRANCH}"
+            checkout([$class: 'GitSCM',
+              branches: [[name: "*/${params.BRANCH}"]], // this auto maps to "origin/main" correctly
+              userRemoteConfigs: [[
+                url: repoUrl,
+                credentialsId: 'github-token'
+                ]]
+            ])
+          } else {
+            error("❌ No valid branch or tag selected.")
+          }
+        }
+      }
+    }
+
+
+    stage('Auth to GCP (Secret Access)') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-secret-access-key', variable: 'SECRET_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$SECRET_FILE
+            gcloud config set project $PROJECT_ID
+          '''
+        }
+      }
+    }
+
+    stage('Fetch & Convert Secrets') {
+      steps {
+        script {
+          def serviceSecret = "${SERVICE_NAME}"
+    
+          sh """
+            gcloud secrets versions access latest --secret="common" > common.env || touch common.env
+            gcloud secrets versions access latest --secret="${serviceSecret}" > ${serviceSecret}.env || touch ${serviceSecret}.env
+    
+            echo "=== common.env ==="
+            cat common.env
+    
+            echo "=== ${serviceSecret}.env ==="
+            cat ${serviceSecret}.env
+    
+            cat common.env ${serviceSecret}.env > .env
+            echo "=== Combined .env ==="
+            cat .env
+          """
+    
+          writeFile file: 'convert_env.sh', text: """#!/bin/bash
+    echo "" > env.yaml
+    while IFS= read -r line || [ -n "\$line" ]; do
+      [[ -z "\$line" || "\${line:0:1}" == "#" ]] && continue
+      key="\${line%%=*}"
+      value="\${line#*=}"
+      [[ "\$value" == \\\"*\\\" ]] && value="\${value:1:\${#value}-2}"
+      [[ "\$value" == \'*\' ]] && value="\${value:1:\${#value}-2}"
+      value="\${value//\\\"/\\\\\\\"}"
+      echo "\$key: \"\$value\"" >> env.yaml
+    done < .env
+    """
+          sh 'chmod +x convert_env.sh && ./convert_env.sh'
+          sh 'echo "=== env.yaml (for Cloud Run) ===" && cat env.yaml'
+        }
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          sh "docker build -t ${IMAGE_NAME}:${imageTag} ."
+        }
+      }
+    }
+
+    stage('Auth to GCP (Deploy Access)') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-deploy-access-key', variable: 'DEPLOY_FILE')]) {
+          sh '''
+            gcloud auth activate-service-account --key-file=$DEPLOY_FILE
+            gcloud config set project $PROJECT_ID
+            gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+          '''
+        }
+      }
+    }
+
+    stage('Tag & Push to Artifact Registry') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${imageTag}"
+          sh """
+            docker tag ${IMAGE_NAME}:${imageTag} ${fullImage}
+            docker push ${fullImage}
+          """
+        }
+      }
+    }
+
+    stage('Deploy to Cloud Run') {
+      steps {
+        script {
+          def imageTag = params.TAG?.trim() ? params.TAG : 'latest'
+          def fullImage = "${ARTIFACT_REPO}/${IMAGE_NAME}:${imageTag}"
+          sh """
+            gcloud run deploy ${SERVICE_NAME} \
+              --image=${fullImage} \
+              --region=${REGION} \
+              --platform=managed \
+              --allow-unauthenticated \
+              --env-vars-file=env.yaml
+          """
+          echo "✅ Deployed ${SERVICE_NAME} with image: ${fullImage}"
+        }
+      }
+    }
+  }
+}
+
     stage('Checkout Code') {
       steps {
         script {
