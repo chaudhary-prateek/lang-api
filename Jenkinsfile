@@ -1,6 +1,14 @@
 pipeline {
   agent any
 
+  environment {
+    PROJECT_ID = 'mystical-melody-463806-k9'
+    REGION = 'asia-south2'
+    SERVICE_NAME = 'lang-api'
+    ARTIFACT_REPO = 'asia-south2-docker.pkg.dev/mystical-melody-463806-k9/lang-api'
+    IMAGE_NAME = "${SERVICE_NAME}"
+  }
+
   parameters {
     gitParameter(
       name: 'BRANCH',
@@ -14,7 +22,7 @@ pipeline {
     )
 
     gitParameter(
-                name: 'tag',
+                name: 'TAG',
                 type: 'PT_TAG',
                 tagFilter: '',
                 defaultValue: '',
