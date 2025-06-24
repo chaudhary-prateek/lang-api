@@ -7,7 +7,7 @@ pipeline {
     SERVICE_NAME = 'lang-api'
     ARTIFACT_REPO = "asia-south2-docker.pkg.dev/${PROJECT_ID}/lang-api"
     IMAGE_NAME = "${SERVICE_NAME}"
-    REPO_URL = 'https://github.com/chaudhary-prateek/final-semantic-setup.git'
+    REPO_URL = 'https://github.com/chaudhary-prateek/lang-api.git'
   }
 
   parameters {
@@ -17,7 +17,7 @@ pipeline {
       defaultValue: 'main',
       description: 'Select the Git branch to use',
       branchFilter: 'origin/(.*)',
-      useRepository: 'https://github.com/chaudhary-prateek/final-semantic-setup.git',
+      useRepository: 'https://github.com/chaudhary-prateek/lang-api.git',
       sortMode: 'DESCENDING',
       selectedValue: 'NONE'
     )
