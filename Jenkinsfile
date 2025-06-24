@@ -14,7 +14,7 @@ pipeline {
     gitParameter(
       name: 'BRANCH',
       type: 'PT_BRANCH',
-      defaultValue: 'main',
+      defaultValue: '',
       description: 'Select the Git branch to use',
       branchFilter: 'origin/(.*)',
       useRepository: 'https://github.com/chaudhary-prateek/lang-api.git',
@@ -27,6 +27,7 @@ pipeline {
       type: 'PT_TAG',
       description: 'Select a Git tag to use (leave branch empty)',
       defaultValue: '',
+      sortMode: 'DESCENDING',
       selectedValue: 'NONE'
       
     )
