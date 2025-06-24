@@ -82,38 +82,35 @@ pipeline {
     stage('Fetch & Convert Secrets') {
       steps {
         script {
-          def tag = params.TAG?.trim()
-          def branch = params.BRANCH?.trim()
-          def envSuffix = (tag && tag.contains('dev')) || branch == 'develop' ? 'dev' : 'prod'
-          def serviceSecret = "${SERVICE_NAME}-${envSuffix}"
-
+          def serviceSecret = "${SERVICE_NAME}"
+    
           sh """
             gcloud secrets versions access latest --secret="common" > common.env || touch common.env
             gcloud secrets versions access latest --secret="${serviceSecret}" > ${serviceSecret}.env || touch ${serviceSecret}.env
-
+    
             echo "=== common.env ==="
             cat common.env
-
+    
             echo "=== ${serviceSecret}.env ==="
             cat ${serviceSecret}.env
-
+    
             cat common.env ${serviceSecret}.env > .env
             echo "=== Combined .env ==="
             cat .env
           """
-
+    
           writeFile file: 'convert_env.sh', text: """#!/bin/bash
-echo "" > env.yaml
-while IFS= read -r line || [ -n "\$line" ]; do
-  [[ -z "\$line" || "\${line:0:1}" == "#" ]] && continue
-  key="\${line%%=*}"
-  value="\${line#*=}"
-  [[ "\$value" == \\\"*\\\" ]] && value="\${value:1:\${#value}-2}"
-  [[ "\$value" == \'*\' ]] && value="\${value:1:\${#value}-2}"
-  value="\${value//\\\"/\\\\\\\"}"
-  echo "\$key: \"\$value\"" >> env.yaml
-done < .env
-"""
+    echo "" > env.yaml
+    while IFS= read -r line || [ -n "\$line" ]; do
+      [[ -z "\$line" || "\${line:0:1}" == "#" ]] && continue
+      key="\${line%%=*}"
+      value="\${line#*=}"
+      [[ "\$value" == \\\"*\\\" ]] && value="\${value:1:\${#value}-2}"
+      [[ "\$value" == \'*\' ]] && value="\${value:1:\${#value}-2}"
+      value="\${value//\\\"/\\\\\\\"}"
+      echo "\$key: \"\$value\"" >> env.yaml
+    done < .env
+    """
           sh 'chmod +x convert_env.sh && ./convert_env.sh'
           sh 'echo "=== env.yaml (for Cloud Run) ===" && cat env.yaml'
         }
