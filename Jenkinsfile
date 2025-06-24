@@ -39,24 +39,34 @@ pipeline {
           def selectedTag = params.TAG?.trim()
           def selectedBranch = params.BRANCH?.trim()
     
-          echo "Selected TAG: ${selectedTag}, Selected BRANCH: ${selectedBranch}"
+          echo "Selected BRANCH: ${selectedBranch}, Selected TAG: ${selectedTag}"
     
-          if (selectedTag && selectedTag != 'NONE') {
-            echo "Checking out tag: ${selectedTag}"
+          if ((selectedTag == 'NONE' || !selectedTag) && (selectedBranch == 'NONE' || !selectedBranch)) {
+            error("❌ You must select either a BRANCH or a TAG.")
+          }
+    
+          if ((selectedTag != 'NONE' && selectedTag) && (selectedBranch != 'NONE' && selectedBranch)) {
+            error("❌ You cannot select both BRANCH and TAG. Choose only one.")
+          }
+    
+          if (selectedTag != 'NONE' && selectedTag) {
+            echo "✅ Checking out TAG: ${selectedTag}"
             checkout([
               $class: 'GitSCM',
               branches: [[name: "refs/tags/${selectedTag}"]],
               userRemoteConfigs: [[url: gitUrl]],
               extensions: []
             ])
-          } else {
-            selectedBranch = selectedBranch ?: 'main'
-            echo "Checking out branch: ${selectedBranch}"
+          }
+    
+          if (selectedBranch != 'NONE' && selectedBranch) {
+            echo "✅ Checking out BRANCH: ${selectedBranch}"
             git branch: selectedBranch, url: gitUrl
           }
         }
       }
     }
+
 
     stage('Auth to GCP (Secret Access)') {
       steps {
