@@ -13,7 +13,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          persist-credentials: true  # Enable default GitHub token
+          fetch-depth: 0  # Full history required
+          persist-credentials: true  # Use default GITHUB_TOKEN
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
@@ -30,5 +31,5 @@ jobs:
 
       - name: Run Semantic Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use GitHub-provided token
         run: npx semantic-release
