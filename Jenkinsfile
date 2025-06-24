@@ -25,9 +25,10 @@ pipeline {
     gitParameter(
       name: 'TAG',
       type: 'PT_TAG',
+      description: 'Select a Git tag to use (leave branch empty)',
       defaultValue: '',
       selectedValue: 'NONE'
-      description: 'Select a Git tag to use (leave branch empty)'
+      
     )
   }
 
