@@ -39,29 +39,29 @@ pipeline {
         script {
           echo "🌿 Branch: ${params.BRANCH}"
           echo "🏷️ Tag: ${params.TAG}"
-    
-          if (!params.BRANCH?.trim() && !params.TAG?.trim()) {
-            error "❌ You must select either a Branch or a Tag before triggering the build."
-          }
-    
+
+          def repoUrl = 'https://github.com/chaudhary-prateek/final-semantic-setup.git'
+
           if (params.TAG?.trim()) {
-            echo "📥 Checking out TAG: ${params.TAG}"
+            echo "📥 Checking out tag: ${params.TAG}"
             checkout([$class: 'GitSCM',
               branches: [[name: "refs/tags/${params.TAG}"]],
               userRemoteConfigs: [[
-                url: env.REPO_URL,
+                url: repoUrl,
                 credentialsId: 'github-token'
-              ]]
+                ]]
+            ])
+          } else if (params.BRANCH?.trim()) {
+            echo "📥 Checking out branch: ${params.BRANCH}"
+            checkout([$class: 'GitSCM',
+              branches: [[name: "*/${params.BRANCH}"]], // this auto maps to "origin/main" correctly
+              userRemoteConfigs: [[
+                url: repoUrl,
+                credentialsId: 'github-token'
+                ]]
             ])
           } else {
-            echo "📥 Checking out BRANCH: ${params.BRANCH}"
-            checkout([$class: 'GitSCM',
-              branches: [[name: "*/${params.BRANCH}"]],
-              userRemoteConfigs: [[
-                url: env.REPO_URL,
-                credentialsId: 'github-token'
-              ]]
-            ])
+            error("❌ No valid branch or tag selected.")
           }
         }
       }
