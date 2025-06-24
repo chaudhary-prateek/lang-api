@@ -36,24 +36,23 @@ pipeline {
       steps {
         script {
           def gitUrl = 'https://github.com/chaudhary-prateek/lang-api.git'
-          def branch = params.BRANCH?.trim()
-          def tag = params.TAG?.trim()
+          def selectedTag = params.TAG?.trim()
+          def selectedBranch = params.BRANCH?.trim()
     
-          // Fallback to 'main' if nothing is selected
-          if (tag && tag != 'NONE') {
-            echo "Checking out tag: ${tag}"
+          echo "Selected TAG: ${selectedTag}, Selected BRANCH: ${selectedBranch}"
+    
+          if (selectedTag && selectedTag != 'NONE') {
+            echo "Checking out tag: ${selectedTag}"
             checkout([
               $class: 'GitSCM',
-              branches: [[name: "refs/tags/${tag}"]],
+              branches: [[name: "refs/tags/${selectedTag}"]],
               userRemoteConfigs: [[url: gitUrl]],
-              doGenerateSubmoduleConfigurations: false,
-              submoduleCfg: [],
               extensions: []
             ])
           } else {
-            branch = branch ?: 'main'
-            echo "Checking out branch: ${branch}"
-            git branch: branch, url: gitUrl
+            selectedBranch = selectedBranch ?: 'main'
+            echo "Checking out branch: ${selectedBranch}"
+            git branch: selectedBranch, url: gitUrl
           }
         }
       }
