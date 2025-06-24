@@ -1,33 +1,24 @@
 pipeline {
   agent any
 
-  environment {
-    PROJECT_ID = 'mystical-melody-463806-k9'
-    REGION = 'asia-south2'
-    SERVICE_NAME = 'lang-api'
-    ARTIFACT_REPO = 'asia-south2-docker.pkg.dev/mystical-melody-463806-k9/lang-api'
-    IMAGE_NAME = "${SERVICE_NAME}"
-  }
-
   parameters {
     gitParameter(
       name: 'BRANCH',
       type: 'PT_BRANCH',
       defaultValue: 'main',
       description: 'Select the Git branch to use',
-      branchFilter: 'origin/(.*)',
-      useRepository: 'https://github.com/chaudhary-prateek/lang-api.git',
+      branchFilter: 'origin/(.*)',             // Only matches origin/ branches
+      useRepository: 'https://github.com/chaudhary-prateek/final-semantic-setup.git',
       sortMode: 'DESCENDING',
       selectedValue: 'NONE',
     )
 
     gitParameter(
-      name: 'TAG',
-      type: 'PT_TAG',
-      tagFilter: '',
-      defaultValue: 'NONE',
-      selectedValue: 'NONE',
-      description: 'Select a tag'
+                name: 'tag',
+                type: 'PT_TAG',
+                tagFilter: '',
+                defaultValue: '',
+                description: 'Select a dev tag'
     )
   }
 
@@ -35,38 +26,35 @@ pipeline {
     stage('Checkout Code') {
       steps {
         script {
-          def gitUrl = 'https://github.com/chaudhary-prateek/lang-api.git'
-          def selectedTag = params.TAG?.trim()
-          def selectedBranch = params.BRANCH?.trim()
-    
-          echo "Selected BRANCH: ${selectedBranch}, Selected TAG: ${selectedTag}"
-    
-          if ((selectedTag == 'NONE' || !selectedTag) && (selectedBranch == 'NONE' || !selectedBranch)) {
-            error("❌ You must select either a BRANCH or a TAG.")
-          }
-    
-          if ((selectedTag != 'NONE' && selectedTag) && (selectedBranch != 'NONE' && selectedBranch)) {
-            error("❌ You cannot select both BRANCH and TAG. Choose only one.")
-          }
-    
-          if (selectedTag != 'NONE' && selectedTag) {
-            echo "✅ Checking out TAG: ${selectedTag}"
-            checkout([
-              $class: 'GitSCM',
-              branches: [[name: "refs/tags/${selectedTag}"]],
-              userRemoteConfigs: [[url: gitUrl]],
-              extensions: []
+          echo "🌿 Branch: ${params.BRANCH}"
+          echo "🏷️ Tag: ${params.TAG}"
+
+          def repoUrl = 'https://github.com/chaudhary-prateek/final-semantic-setup.git'
+
+          if (params.TAG?.trim()) {
+            echo "📥 Checking out tag: ${params.TAG}"
+            checkout([$class: 'GitSCM',
+              branches: [[name: "refs/tags/${params.TAG}"]],
+              userRemoteConfigs: [[
+                url: repoUrl,
+                credentialsId: 'github-token'
+                ]]
             ])
-          }
-    
-          if (selectedBranch != 'NONE' && selectedBranch) {
-            echo "✅ Checking out BRANCH: ${selectedBranch}"
-            git branch: selectedBranch, url: gitUrl
+          } else if (params.BRANCH?.trim()) {
+            echo "📥 Checking out branch: ${params.BRANCH}"
+            checkout([$class: 'GitSCM',
+              branches: [[name: "*/${params.BRANCH}"]], // this auto maps to "origin/main" correctly
+              userRemoteConfigs: [[
+                url: repoUrl,
+                credentialsId: 'github-token'
+                ]]
+            ])
+          } else {
+            error("❌ No valid branch or tag selected.")
           }
         }
       }
     }
-
 
     stage('Auth to GCP (Secret Access)') {
       steps {
