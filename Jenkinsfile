@@ -34,7 +34,28 @@ pipeline {
   stages {
     stage('Checkout Code') {
       steps {
-        git branch: "${params.BRANCH}", url: 'https://github.com/chaudhary-prateek/lang-api.git'
+        script {
+          def gitUrl = 'https://github.com/chaudhary-prateek/lang-api.git'
+          def branch = params.BRANCH?.trim()
+          def tag = params.TAG?.trim()
+    
+          // Fallback to 'main' if nothing is selected
+          if (tag && tag != 'NONE') {
+            echo "Checking out tag: ${tag}"
+            checkout([
+              $class: 'GitSCM',
+              branches: [[name: "refs/tags/${tag}"]],
+              userRemoteConfigs: [[url: gitUrl]],
+              doGenerateSubmoduleConfigurations: false,
+              submoduleCfg: [],
+              extensions: []
+            ])
+          } else {
+            branch = branch ?: 'main'
+            echo "Checking out branch: ${branch}"
+            git branch: branch, url: gitUrl
+          }
+        }
       }
     }
 
