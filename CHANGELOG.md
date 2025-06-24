@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/chaudhary-prateek/lang-api/compare/v1.0.1...v1.1.0) (2025-06-24)
+
+
+### Features
+
+* update improvement ([e5ac815](https://github.com/chaudhary-prateek/lang-api/commit/e5ac815b4b0ea67e99f2cfd0c1796fe84ebf1d97))
+
 ## [1.0.1](https://github.com/chaudhary-prateek/lang-api/compare/v1.0.0...v1.0.1) (2025-05-28)
 
 
