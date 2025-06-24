@@ -40,7 +40,7 @@ pipeline {
           echo "🌿 Branch: ${params.BRANCH}"
           echo "🏷️ Tag: ${params.TAG}"
 
-          def repoUrl = 'https://github.com/chaudhary-prateek/final-semantic-setup.git'
+          def repoUrl = 'https://github.com/chaudhary-prateek/lang-api.git'
 
           if (params.TAG?.trim()) {
             echo "📥 Checking out tag: ${params.TAG}"
